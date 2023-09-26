@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.display.MenuMapper">
+	<resultMap id="resultMenuVO" type="egovframework.diam.biz.model.display.Dm_menus_vo">
+	</resultMap>
+		
+	<select id="selectMenuList" resultMap="resultMenuVO">
+		SELECT	*
+			 ,	IFNULL((SELECT dm_menu_text FROM dm_menus WHERE dm_id = A.dm_parent_id), '상위메뉴없음') AS dm_parent_text
+		  FROM	dm_menus A
+		 WHERE	A.dm_domain = #{dm_domain}
+		   AND 	A.dm_menu_view = '1'
+		   AND  A.dm_delete_yn = 'N'
+	  ORDER BY	A.dm_menu_order ASC  
+	</select>
+	
+	<select id="selectMenuRootChild" resultMap="resultMenuVO">
+		SELECT	*
+			 ,	IFNULL((SELECT dm_menu_text FROM dm_menus WHERE dm_id = A.dm_parent_id), '상위메뉴없음') AS dm_parent_text
+		  FROM	dm_menus A
+		 WHERE	A.dm_domain = #{dm_domain}
+		   AND	A.dm_parent_id != '0'
+	       AND  A.dm_delete_yn = 'N'
+      ORDER BY	A.dm_menu_order ASC
+	</select>
+	
+	<select id="selectMenuByParentId" resultMap="resultMenuVO">
+		SELECT	*
+		  FROM	dm_menus
+		 WHERE	dm_id = #{dm_parent_id}
+	</select>
+	
+	<insert id="insertMenu">
+		INSERT
+		  INTO	dm_menus
+		  	 (	dm_domain, 
+				dm_parent_id, 
+				dm_menu_text,
+				dm_link_type, 
+				dm_link_data, 
+				dm_link_target, 
+				dm_menu_view, 
+				dm_menu_hidden, 
+				dm_menu_order, 
+				dm_create_dt,
+				dm_create_id,
+				dm_menu_desc,
+				dm_depth,
+				dm_url
+		  	 )
+		VALUES
+			 (	#{dm_domain},
+			 	#{dm_parent_id},
+			 	#{dm_menu_text},
+			 	#{dm_link_type},
+			 	#{dm_link_data},
+			 	#{dm_link_target},
+			 	#{dm_menu_view},
+			 	#{dm_menu_hidden},
+			 	#{dm_menu_order},
+			 	now(),
+			 	#{dm_create_id},
+			 	#{dm_menu_desc},
+			 	#{dm_depth},
+			 	#{dm_url}
+			 )		
+	</insert>
+	
+	<update id="updateMenu">
+		UPDATE	dm_menus
+		   SET	dm_menu_text = #{dm_menu_text} 
+   			 ,	dm_link_type = #{dm_link_type} 
+   			 ,	dm_link_data = #{dm_link_data} 
+    		 ,	dm_link_target = #{dm_link_target} 
+    		 ,	dm_menu_view = #{dm_menu_view}
+    		 ,	dm_menu_hidden = #{dm_menu_hidden} 
+    		 ,	dm_menu_order = #{dm_menu_order}
+    		 ,	dm_modify_dt = now()
+    		 ,	dm_modify_id = #{dm_modify_id} 
+    		 ,	dm_menu_desc = #{dm_menu_desc} 
+    		 ,	dm_url = #{dm_url}
+       	 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectMenuListByParentId" resultMap="resultMenuVO">
+		SELECT	*
+		  FROM	dm_menus
+		 WHERE	dm_parent_id = #{dm_parent_id}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<delete id="deleteMenuByDmid">
+		UPDATE	dm_menus
+		   SET  dm_delete_yn = 'Y'
+		      , dm_delete_id = #{dm_delete_id}
+		      , dm_delete_dt = now()
+		 WHERE	dm_id = #{dm_id}
+	</delete>
+	
+	<select id="selectMenuListDesc" resultMap="resultMenuVO">
+		SELECT	*
+		     ,	IFNULL((SELECT dm_menu_text FROM dm_menus WHERE dm_id = A.dm_parent_id), '상위메뉴없음') AS dm_parent_text
+		  FROM	dm_menus A
+		 WHERE	A.dm_domain = #{dm_domain}
+		   AND  A.dm_delete_yn = 'N'
+	  ORDER BY	A.dm_menu_desc
+	</select>
+	
+	<insert id="insertMenuRoot">
+		INSERT
+		  INTO	dm_menus
+		 	 (	dm_domain,
+		 	 	dm_parent_id,
+		 	 	dm_menu_text,
+		 	 	dm_link_type,
+		 	 	dm_url,
+		 	 	dm_link_data,
+		 	 	dm_link_target,
+		 	 	dm_menu_desc,
+		 	 	dm_menu_view,
+		 	 	dm_menu_hidden,
+		 	 	dm_menu_order,
+		 	 	dm_depth,
+		 	 	dm_create_dt,
+		 	 	dm_create_id
+		 	 )
+		VALUES	
+			 (	#{dm_domain},
+			 	0,
+			 	'ROOT',
+			 	'1',
+			 	'',
+			 	'',
+			 	'_self',
+			 	'',
+			 	'1',
+			 	'0',
+			 	1,
+			 	1,
+			 	now(),
+			 	#{dm_create_id}
+			 )
+	</insert>
+	
+	<select id="selectMenuByDmId" resultMap="resultMenuVO">
+		SELECT	*
+		  FROM	dm_menus
+		 WHERE	dm_id = #{dm_id}
+	</select>
+	
+	<update id="deleteMenuByDomain">
+		UPDATE	dm_menus
+		   SET  dm_delete_id = #{dm_delete_id}
+		      , dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		 WHERE	dm_domain = #{dm_domain}
+	</update>
+	
+	<select id="selectTreeMenu" resultMap="resultMenuVO">
+		WITH RECURSIVE CTE AS (
+			SELECT dm_id, dm_parent_id, dm_menu_text, dm_depth FROM dm_menus WHERE dm_id = #{dm_id} AND dm_delete_yn = 'N'
+			UNION ALL 
+			SELECT a.dm_id, a.dm_parent_id, a.dm_menu_text, a.dm_depth FROM dm_menus AS a
+			INNER JOIN CTE AS b ON a.dm_parent_id = b.dm_id AND a.dm_delete_yn = 'N'
+		)
+		SELECT dm_id, dm_parent_id, dm_menu_text, dm_depth FROM CTE
+	</select>
+</mapper>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.WebLogMapper">
+	<resultMap id="resultWebLobVO" type="egovframework.diam.biz.model.statistics.Dm_web_log_vo">
+	</resultMap>
+	
+	<sql id="webLogWhere">
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(STR_TO_DATE(#{search_start_date},'%Y-%m-%d'),'%Y-%m-%d')
+		</if>
+		<if test="search_end_date != null and search_end_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(STR_TO_DATE(#{search_end_date},'%Y-%m-%d'),'%Y-%m-%d')
+		</if>
+	</sql>
+	
+	<sql id="webLogYearMonthWhere">
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m') <![CDATA[>=]]> DATE_FORMAT(STR_TO_DATE(#{search_start_date}, '%Y-%m'),'%Y-%m')
+		</if>
+		<if test="search_end_date != null and search_end_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m') <![CDATA[<=]]> DATE_FORMAT(STR_TO_DATE(#{search_end_date}, '%Y-%m'),'%Y-%m')
+		</if>
+	</sql>
+	
+	<select id="selectWebLogMaxPvCount" resultType="int">
+		SELECT IFNULL(MAX(pv_count),0)
+		FROM   (SELECT COUNT(*)                             AS pv_count
+		        FROM   dm_web_log
+		        WHERE  dm_fn_code = 'page'
+		        AND dm_domain = #{dm_domain}
+		        <include refid="webLogWhere"/>
+		        <choose>
+		        	<when test="search_type == 'yearMonth'">
+				        GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		        	</when>
+		        	<otherwise>
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		        	</otherwise>
+		        </choose>
+		        ) a
+	</select>
+	
+	<select id="selectWebLogMinPvCount" resultType="int">
+		SELECT IFNULL(MIN(pv_count),0)
+		FROM   (SELECT COUNT(*)                             AS pv_count
+		        FROM   dm_web_log
+		        WHERE  dm_fn_code = 'page'
+		        AND dm_domain = #{dm_domain}
+		        <include refid="webLogWhere"/>
+		        <choose>
+		        	<when test="search_type == 'yearMonth'">
+				        GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		        	</when>
+		        	<otherwise>
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		        	</otherwise>
+		        </choose>
+		        ) a
+	</select>
+	
+	<select id="selectWebLogTotalPvCount" resultType="int">
+		SELECT count(*) FROM dm_web_log WHERE dm_fn_code = 'page' AND dm_domain = #{dm_domain}
+		<include refid="webLogWhere"/>
+	</select>
+	
+	<select id="selectWebLogPvDatetime" resultMap="resultWebLobVO">
+		SELECT a.dm_datetime
+		FROM   (SELECT Count(*)                             AS pv_count,
+		               Date_format(dm_datetime, '%Y-%m-%d') AS dm_datetime
+		        FROM   dm_web_log
+		        WHERE  dm_fn_code = 'page'
+		        AND dm_domain = #{dm_domain}
+		        <include refid="webLogWhere"/>
+		        GROUP  BY Date_format(dm_datetime, '%Y-%m-%d')) a
+		WHERE  1 = 1
+		       AND a.pv_count = #{pv_count}
+		       <include refid="webLogWhere"/>
+		       LIMIT 1
+	</select>
+	
+	<select id="selectWebLogIpPv" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip) AS pv_count FROM dm_web_log
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		AND dm_fn_code = 'page'
+		<choose>
+			<when test="search_type == 'yearMonth'">
+				<include refid="webLogYearMonthWhere"/>
+			</when>
+			<otherwise>
+				<include refid="webLogWhere"/>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectWebLogPv" resultType="int">
+		SELECT COUNT(*) AS pv_count FROM dm_web_log
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		AND dm_fn_code = 'page'
+		<choose>
+			<when test="search_type == 'yearMonth'">
+				<include refid="webLogYearMonthWhere"/>
+			</when>
+			<otherwise>
+				<include refid="webLogWhere"/>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectWebLogNewPv" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip) AS pv_count FROM dm_web_log
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		AND dm_re_visit = 'visit'
+		AND dm_fn_code = 'page'
+		<choose>
+			<when test="search_type == 'yearMonth'">
+				<include refid="webLogYearMonthWhere"/>
+			</when>
+			<otherwise>
+				<include refid="webLogWhere"/>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectWebLogRePv" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip) AS pv_count FROM dm_web_log
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		AND dm_re_visit = 're_visit'
+		AND dm_fn_code = 'page'
+		<choose>
+			<when test="search_type == 'yearMonth'">
+				<include refid="webLogYearMonthWhere"/>
+			</when>
+			<otherwise>
+				<include refid="webLogWhere"/>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectWebLogDayName" resultType="String">
+		SELECT CASE
+		         WHEN DAYOFWEEK(dm_datetime) = 1 THEN '일요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 2 THEN '월요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 3 THEN '화요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 4 THEN '수요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 5 THEN '목요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 6 THEN '금요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 7 THEN '토요일'
+		       END AS 'min_pv_date'
+		FROM   dm_web_log
+		WHERE  dm_fn_code = 'page'
+		       AND dm_domain = #{dm_domain}
+		       <include refid="webLogWhere" />
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		HAVING COUNT(*) = #{pv_count}
+		LIMIT 1
+	</select>
+	
+	<select id="selectWebLogVisitorDayCount" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip)
+		FROM   dm_web_log
+		WHERE  dm_fn_code = 'page'
+		       AND dm_domain = #{dm_domain}
+		       AND DAYOFWEEK(dm_datetime) = #{day_num}
+		       <include refid="webLogWhere" />
+	</select>
+
+	<select id="selectWebLogVisitDayCount" resultType="int">
+		SELECT COUNT(*)
+		FROM   dm_web_log
+		WHERE  dm_fn_code = 'page'
+		       AND dm_domain = #{dm_domain}
+		       AND DAYOFWEEK(dm_datetime) = #{day_num}
+		       <include refid="webLogWhere" />
+	</select>
+
+	<select id="selectWebLogNewVisitDayCount" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip)
+		FROM   dm_web_log
+		WHERE  dm_fn_code = 'page'
+		       AND dm_domain = #{dm_domain}
+		       AND DAYOFWEEK(dm_datetime) = #{day_num}
+		       AND dm_re_visit = 'visit'
+		       <include refid="webLogWhere" />
+	</select>
+
+	<select id="selectWebLogReVisitDayCount" resultType="int">
+		SELECT COUNT(DISTINCT dm_ip)
+		FROM   dm_web_log
+		WHERE  dm_fn_code = 'page'
+		       AND dm_domain = #{dm_domain}
+		       AND DAYOFWEEK(dm_datetime) = #{day_num}
+		       AND dm_re_visit = 're_visit'
+		       <include refid="webLogWhere" />
+	</select>
+	
+	<select id="selectWebLogPvYearMonth" resultMap="resultWebLobVO">
+		SELECT a.dm_datetime
+		FROM   (SELECT Count(*)                             AS pv_count,
+		               Date_format(dm_datetime, '%Y-%m') AS dm_datetime
+		        FROM   dm_web_log
+		        WHERE  dm_fn_code = 'page'
+		        AND dm_domain = #{dm_domain}
+		        <include refid="webLogWhere"/>
+		        GROUP  BY Date_format(dm_datetime, '%Y-%m')) a
+		WHERE  1 = 1
+		       AND a.pv_count = #{pv_count}
+		       LIMIT 1
+	</select>
+	
+	<select id="selectWebLogPvChart" resultMap="resultWebLobVO">
+		SELECT a.date AS dm_datetime,
+		       (SELECT COUNT(DISTINCT dm_ip) AS pv_count FROM dm_web_log
+				 WHERE 1=1
+					   AND dm_domain = #{dm_domain}
+					   AND dm_fn_code = 'page'
+		               AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+		       ) AS log_ip_pv_count,
+		       (SELECT COUNT(*) AS pv_count
+		        FROM   dm_web_log
+		        WHERE  1 = 1
+		               AND dm_domain = #{dm_domain}
+		               AND dm_fn_code = 'page'
+		               AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+			) AS log_pv_count,
+		       (SELECT COUNT(DISTINCT dm_ip) AS pv_count
+		        FROM   dm_web_log
+		        WHERE  1 = 1
+		               AND dm_domain = #{dm_domain}
+		               AND dm_fn_code = 'page'
+		               AND dm_re_visit = 'visit'
+		               AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+		       ) AS log_new_pv_count,
+		       (SELECT COUNT(DISTINCT dm_ip) AS pv_count
+		        FROM   dm_web_log
+		        WHERE  1 = 1
+		               AND dm_domain = #{dm_domain}
+		               AND dm_fn_code = 'page'
+		               AND dm_re_visit = 're_visit'
+		               AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+		       ) AS log_re_pv_count
+		FROM (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select>
+	
+	<select id="selectWebLogIp" resultType="int">
+		SELECT COUNT(*) FROM dm_web_log WHERE dm_ip = #{dm_ip}
+	</select>
+	
+	<insert id="insertWebLog">
+		INSERT
+		  INTO	dm_web_log
+		  	 (	dm_datetime,
+		  	 	dm_domain,
+		  	 	dm_login_id,
+		  	 	dm_ip,
+		  	 	dm_fn_code,
+		  	 	dm_fn_url,
+		  	 	dm_agent_info,
+		  	 	dm_type,
+		  	 	dm_re_visit
+		  	 )
+	    VALUES
+	    	 (	now(),
+	    	 	#{dm_domain},
+	    	 	#{dm_login_id},
+	    	 	#{dm_ip},
+	    	 	#{dm_fn_code},
+	    	 	#{dm_fn_url},
+	    	 	#{dm_agent_info},
+	    	 	#{dm_type},
+	    	 	#{dm_re_visit}
+	    	 )
+	</insert>
+</mapper>

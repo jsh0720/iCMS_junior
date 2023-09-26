@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.member.MemberLoginLogMapper">
+	<resultMap id="resultLoginLogVO" type="egovframework.diam.biz.model.member.Dm_login_log_vo">
+	</resultMap>
+	
+	<sql id="selectLoginLogListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_login_id"'>
+					AND	A.dm_login_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_type"'>
+					AND	A.dm_type LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_login_id LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_type LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if>	
+		<if test='search_start_date != null and search_start_date != ""'>
+			AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &gt;= STR_TO_DATE(#{search_start_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_end_date != null and search_end_date != ""'>
+			AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &lt;= STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+		</if>
+	</sql>
+	
+	<select id="selectLoginLogListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_login_log A
+		 WHERE	1=1
+		 <include refid="selectLoginLogListWhere"/>
+	</select>
+	
+	<select id="selectLoginLogList" resultMap="resultLoginLogVO">
+		SELECT	*
+		  FROM	dm_login_log A
+		 WHERE	1=1
+		<include refid="selectLoginLogListWhere"/>
+	  ORDER BY	dm_id desc
+		 LIMIT	#{page}, #{rows}
+	</select>
+</mapper>

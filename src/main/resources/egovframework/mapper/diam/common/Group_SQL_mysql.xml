@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.GroupMapper">
+	<resultMap id="resultGroupVO" type="egovframework.diam.cmm.model.Dm_group_vo">
+	</resultMap>
+	
+	<sql id="selectGroupListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_group_id"'>
+					AND	dm_group_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_group_name"'>
+					AND	dm_group_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_group_desc"'>
+					AND	dm_group_desc LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						dm_group_id LIKE CONCAT('%', #{search_value} ,'%') OR 
+						dm_group_name LIKE CONCAT('%', #{search_value} ,'%') OR 
+						dm_group_desc LIKE CONCAT('%', #{search_value} ,'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="selectGroupListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_group
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		<include refid="selectGroupListWhere"/>
+	</select>
+	
+	<select id="selectGroupList" resultMap="resultGroupVO">
+		SELECT	*
+		  FROM	dm_group
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectGroupListWhere"/>
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectGroup" resultMap="resultGroupVO">
+		SELECT	*
+		  FROM	dm_group
+		 WHERE	dm_id = #{dm_id}
+	</select>
+	
+	<update id="deleteGroup">
+		UPDATE  dm_group
+		   SET  dm_delete_yn = 'Y'
+		      , dm_delete_id = #{dm_delete_id}
+		      , dm_delete_dt = now()
+		 WHERE  dm_id = #{dm_id}
+	</update>
+	
+	<insert id="insertGroup">
+		INSERT
+		  INTO	dm_group
+		  	 (	dm_group_id,
+		  	 	dm_group_name,
+		  	 	dm_group_desc,
+		  	 	dm_create_dt,
+		  	 	dm_create_id
+		  	 )
+		VALUES
+			 (	#{dm_group_id},
+			 	#{dm_group_name},
+			 	#{dm_group_desc},
+			 	now(),
+			 	#{dm_create_id}
+			 )
+	</insert>
+	
+	<update id="updateGroup">
+		UPDATE	dm_group
+		   SET	dm_group_name = #{dm_group_name}
+			 ,	dm_group_desc = #{dm_group_desc}
+			 ,	dm_modify_dt = now()
+			 ,	dm_modify_id = #{dm_modify_id}
+	     WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectGroupTable" resultMap="resultGroupVO">
+		SELECT	*
+		  FROM	dm_group
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+	</select>
+</mapper>

@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.StatisticsMemberMapper">
+	<resultMap id="resultMemberVO" type="egovframework.diam.biz.model.statistics.Dm_statistics_member_vo">
+	</resultMap>
+	
+	<sql id="memberListWhere">
+<!-- 		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_id"'>
+					AND	dm_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_name"'>
+					AND	dm_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_nick"'>
+					AND	dm_nick LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_hp"'>
+					AND	dm_hp LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						dm_id LIKE CONCAT('%', #{search_value} ,'%') 
+						OR dm_name LIKE CONCAT('%', #{search_value} ,'%') 
+						OR dm_nick LIKE CONCAT('%', #{search_value} ,'%')
+						OR dm_hp LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if> -->
+		<if test='search_start_date != "" and search_start_date != null'>
+			AND	DATE_FORMAT(dm_datetime, '%Y-%m-%d') &gt;= DATE_FORMAT(#{search_start_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_end_date != "" and search_end_date != null'>
+			AND	DATE_FORMAT(dm_datetime, '%Y-%m-%d') &lt;= DATE_FORMAT(#{search_end_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_level != "" and search_level != null'>
+			AND	dm_level = #{search_level}
+		</if>
+		<if test='search_gender != "" and search_gender != null'>
+			AND	dm_sex = #{search_gender}
+		</if>
+		<if test='search_leave != "" and search_leave != null'>
+			AND	dm_leave_date is not null
+			AND	dm_status = 'L'
+		</if>
+	</sql>
+	<!-- 회원 통계 관련 -->
+	<select id="selectMemberStatisticsNewMember" resultMap="resultMemberVO">
+		SELECT  a.date AS dm_datetime,
+		        COUNT(CASE WHEN dm_id IS NOT NULL THEN 1 ELSE NULL END) total_count
+		  FROM  (
+				  SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+				  FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+				  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+				  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+				  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		         ) a
+		LEFT JOIN dm_member b
+		ON a.DATE = DATE_FORMAT(b.dm_datetime, '%Y-%m-%d')
+		WHERE b.dm_id &lt;&gt; 'admin'
+		AND b.dm_level &lt; '6'
+		AND b.dm_status != 'L'
+		AND b.dm_delete_yn != 'Y'
+		AND a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		GROUP BY a.date
+		ORDER  BY a.date
+	</select>
+<!-- 	<select id="selectMemberStatisticsNewMember" resultMap="resultMemberVO">
+		SELECT a.date AS dm_datetime,
+		       (
+			SELECT COUNT(*)
+		        FROM   dm_member
+		        WHERE  DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+		        AND    dm_id &lt;&gt; 'admin'
+			) AS total_count
+		FROM   (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select> -->
+	
+	<select id="selectMemberStatisticsMaxNewMember" resultMap="resultMemberVO">
+		SELECT COUNT(*)                                AS 'total_count',
+		       DATE_FORMAT(dm_datetime, '%Y-%m-%d %H') AS 'dm_datetime',
+		       CASE
+		         WHEN DAYOFWEEK(dm_datetime) = 1 THEN '일요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 2 THEN '월요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 3 THEN '화요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 4 THEN '수요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 5 THEN '목요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 6 THEN '금요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 7 THEN '토요일'
+		       END                                     AS 'yoil'
+		FROM   dm_member
+		WHERE  dm_id &lt;&gt; 'admin'
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		HAVING COUNT(*) = (SELECT MAX(mycount)
+		                   FROM   (SELECT dm_datetime,
+		                                  COUNT(*) AS mycount
+		                           FROM   dm_member
+		                           WHERE  dm_id &lt;&gt; 'admin'
+		                             AND  DATE_FORMAT(dm_datetime, '%Y-%m-%d') BETWEEN #{search_start_date} and #{search_end_date}
+		                             AND  dm_level &lt; '6'
+		                             AND  dm_status != 'L'
+		                             AND  dm_delete_yn != 'Y'  
+		                           GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')) AS b)
+		                           LIMIT 1
+	</select>
+	
+	<select id="selectMemberStatisticsMinNewMember" resultMap="resultMemberVO">
+		SELECT COUNT(*)                                AS 'total_count',
+		       DATE_FORMAT(dm_datetime, '%Y-%m-%d %H') AS 'dm_datetime',
+		       CASE
+		         WHEN DAYOFWEEK(dm_datetime) = 1 THEN '일요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 2 THEN '월요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 3 THEN '화요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 4 THEN '수요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 5 THEN '목요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 6 THEN '금요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 7 THEN '토요일'
+		       END                                     AS 'yoil'
+		FROM   dm_member
+		WHERE  dm_id &lt;&gt; 'admin'
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		HAVING COUNT(*) = (SELECT MIN(mycount)
+		                   FROM   (SELECT dm_datetime,
+		                                  COUNT(*) AS mycount
+		                           FROM   dm_member
+		                           WHERE  dm_id &lt;&gt; 'admin'
+		                             AND  DATE_FORMAT(dm_datetime, '%Y-%m-%d') BETWEEN #{search_start_date} and #{search_end_date}
+		                             AND  dm_level &lt; '6'
+		                             AND  dm_status != 'L'
+		                             AND  dm_delete_yn != 'Y' 
+		                           GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')) AS b)
+		                           LIMIT 1
+	</select>
+	
+	<select id="selectMemberStatisticsTimeNewMember" resultMap="resultMemberVO">
+		SELECT
+		       (
+		              SELECT COUNT(*)
+		              FROM   dm_member
+		              WHERE  DATE_FORMAT(dm_datetime, '%H') = #{dm_datetime}
+		              <include refid="memberListWhere"/>
+		              ) AS 'total_count'
+		FROM   dm_member                            AS v
+		LIMIT 1
+	</select>
+	
+	<select id="selectMemberStatisticsWeekNewMember" resultMap="resultMemberVO">
+		SELECT
+		       (
+		              SELECT COUNT(*)
+		              FROM   dm_member
+		              WHERE  DAYOFWEEK(dm_datetime) = #{dm_datetime}
+		              AND dm_id &lt;&gt; 'admin'
+		              <include refid="memberListWhere"/>
+		              ) AS 'total_count'
+		FROM   dm_member
+		c
+	</select>
+	
+	<select id="selectMemberStatisticsMonthNewMember" resultMap="resultMemberVO">
+		SELECT (SELECT COUNT(*)
+		        FROM   dm_member
+		        WHERE  1=1
+		        AND dm_id &lt;&gt; 'admin'
+		        AND dm_level &lt; '6'
+		        AND dm_status != 'L'
+		        AND dm_delete_yn != 'Y'
+		        AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		        )
+		       AS 'total_count'
+	</select>
+	
+	<select id="selectMemberStatisticsMaxMonthNewMember" resultMap="resultMemberVO">
+		SELECT COUNT(*)                          AS 'total_count',
+		       DATE_FORMAT(dm_datetime, '%Y-%m') AS 'dm_datetime'
+		FROM   dm_member
+		WHERE  dm_id &lt;&gt; 'admin'
+		AND dm_level &lt; '6'
+		AND dm_status != 'L'
+		AND dm_delete_yn != 'Y'
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		HAVING COUNT(*) = (SELECT MAX(mycount)
+		                   FROM   (SELECT dm_datetime,
+		                                  COUNT(*) AS mycount
+		                           FROM   dm_member
+		                           WHERE  dm_id &lt;&gt; 'admin'
+		                             AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		                             AND dm_level &lt; '6'
+		        					 AND dm_status != 'L'
+		        					 AND dm_delete_yn != 'Y'
+		                           GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')) AS b)
+		LIMIT 1
+	</select>
+	
+	<select id="selectMemberStatisticsMinMonthNewMember" resultMap="resultMemberVO">
+		SELECT COUNT(*)                          AS 'total_count',
+		       DATE_FORMAT(dm_datetime, '%Y-%m') AS 'dm_datetime'
+		FROM   dm_member
+		WHERE  dm_id &lt;&gt; 'admin'
+		AND dm_level &lt; '6'
+		AND dm_status != 'L'
+		AND dm_delete_yn != 'Y'
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		HAVING COUNT(*) = (SELECT MIN(mycount)
+		                   FROM   (SELECT dm_datetime,
+		                                  COUNT(*) AS mycount
+		                           FROM   dm_member
+		                           WHERE  dm_id &lt;&gt; 'admin'
+		                             AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		                             AND dm_level &lt; '6'
+		        					 AND dm_status != 'L'
+		        					 AND dm_delete_yn != 'Y'
+		                           GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')) AS b)
+		LIMIT 1
+	</select>
+	
+	<select id="selectMemberStatisticsMonthList" resultType="String">
+		SELECT   DATE_FORMAT(dm_datetime, '%Y-%m') AS dm_datetime
+		FROM     dm_member
+		WHERE    1=1
+		  AND dm_id &lt;&gt; 'admin'
+		  AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		GROUP BY DATE_FORMAT(dm_datetime, '%Y-%m')
+	</select>
+	
+	<select id="selectMemberStatisticsAllDayMember" resultMap="resultMemberVO">
+		SELECT  COUNT(*) AS total_count
+			 ,  COUNT(CASE WHEN dm_status != 'L' THEN 1 ELSE NULL END) AS new_count
+			 ,  COUNT(CASE WHEN dm_status = 'L' THEN 1 ELSE NULL END) AS leave_count
+		  FROM  dm_member 
+		 WHERE  1=1
+		   AND  dm_id != 'admin'
+		   AND  dm_level &lt; 6
+		   AND  dm_delete_yn != 'Y'
+		   AND  DATE_FORMAT(dm_datetime, '%Y-%m-%d') BETWEEN  DATE_FORMAT(#{search_start_date}, '%Y-%m-%d') AND DATE_FORMAT(#{search_end_date}, '%Y-%m-%d')
+		ORDER BY DATE_FORMAT(dm_datetime, '%Y-%m-%d') ASC
+	</select>
+	
+	<select id="selectMemberStatisticsAllDayMemberChart" resultMap="resultMemberVO">
+		SELECT  DATE_FORMAT(dm_datetime, '%Y-%m-%d') as dm_datetime
+			 ,  COUNT(*) AS total_count
+			 ,  COUNT(CASE WHEN dm_status != 'L' THEN 1 ELSE NULL END) AS new_count
+			 ,  COUNT(CASE WHEN dm_status = 'L' THEN 1 ELSE NULL END) AS leave_count
+		  FROM  dm_member 
+		 WHERE  1=1
+		   AND  dm_id != 'admin'
+		   AND  dm_level &lt; 6
+		   AND  dm_delete_yn != 'Y'
+		  AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') BETWEEN  DATE_FORMAT(#{search_start_date}, '%Y-%m-%d') AND DATE_FORMAT(#{search_end_date}, '%Y-%m-%d')
+		GROUP BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		ORDER BY DATE_FORMAT(dm_datetime, '%Y-%m-%d') ASC
+	</select>
+	
+	<select id="selectMemberStatisticsAllMonthMemberChart" resultMap="resultMemberVO">
+		SELECT
+		       (
+		              SELECT COUNT(*)
+		              FROM   dm_member
+		              WHERE  DATE_FORMAT(dm_datetime, '%Y-%m') = #{dm_datetime}
+		              AND    dm_id &lt;&gt; 'admin'
+		              ) AS `total_count`,
+		       (
+		              SELECT COUNT(*)
+		              FROM   dm_member
+		              WHERE  DATE_FORMAT(dm_datetime, '%Y-%m') = #{dm_datetime}
+		              AND    dm_leave_date is not null
+		              AND    dm_id &lt;&gt; 'admin'
+		              ) AS `leave_count`
+	</select>
+	
+	<select id="selectMemberCntExceptAdmin" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_member
+		 WHERE	1=1
+		   AND	dm_id &lt;&gt; 'admin'
+		 <include refid="memberListWhere" />
+	</select>
+	
+	<select id="selectMemberStatisticsCount" resultType="int">
+		SELECT COUNT(*) FROM dm_member WHERE dm_id &lt;&gt; 'admin' AND dm_level &lt; 6 AND dm_status != 'L'
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime, '%Y-%m') = DATE_FORMAT(#{search_start_date}, '%Y-%m')
+		</if>
+	</select>
+	
+	<select id="selectMemberStatisticsNewMemberMonthChart" resultMap="resultMemberVO">
+		SELECT  DATE_FORMAT(dm_datetime, '%Y-%m') AS dm_datetime
+			 ,  count(*) AS total_count
+		  FROM dm_member
+		 WHERE dm_id &lt;&gt; 'admin'
+		   AND dm_level &lt; '6'
+		   AND dm_status != 'L'
+		   AND dm_delete_yn != 'Y'
+		   AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+	  GROUP BY DATE_FORMAT(dm_datetime, '%Y-%m')
+	</select>
+	
+	<select id="selectMemberStatisticsAllMonthMember" resultMap="resultMemberVO">
+		SELECT  COUNT(*) AS total_count
+			 ,  COUNT(CASE WHEN dm_status != 'L' THEN 1 ELSE NULL END) AS new_count
+			 ,  COUNT(CASE WHEN dm_status = 'L' THEN 1 ELSE NULL END) AS leave_count
+		  FROM  dm_member 
+		 WHERE  1=1
+		   AND  dm_id != 'admin'
+		   AND  dm_level &lt; '6'
+		   AND  dm_delete_yn != 'Y'
+		  AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN  DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		ORDER BY DATE_FORMAT(dm_datetime, '%Y-%m') ASC
+	</select>
+	
+	<select id="selectMemberStatisticsAllMemberMonthChart" resultMap="resultMemberVO">
+		SELECT  DATE_FORMAT(dm_datetime, '%Y-%m') as dm_datetime
+			 ,  COUNT(*) AS total_count
+			 ,  COUNT(CASE WHEN dm_status != 'L' THEN 1 ELSE NULL END) AS new_count
+			 ,  COUNT(CASE WHEN dm_status = 'L' THEN 1 ELSE NULL END) AS leave_count
+		  FROM  dm_member 
+		 WHERE  1=1
+		   AND  dm_id != 'admin'
+		   AND  dm_level &lt; '6'
+		   AND  dm_delete_yn != 'Y'
+		  AND DATE_FORMAT(dm_datetime, '%Y-%m') BETWEEN  DATE_FORMAT(#{search_start_date}, '%Y-%m') AND DATE_FORMAT(#{search_end_date}, '%Y-%m')
+		GROUP BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		ORDER BY DATE_FORMAT(dm_datetime, '%Y-%m') ASC
+	</select>
+	
+	<select id="selectMemberStatisticsWeeklyMember" resultMap="resultMemberVO">
+		<![CDATA[
+			SELECT  a.dt AS dm_datetime
+					, (SELECT COUNT(dm_id) FROM dm_member WHERE dm_status != 'L' AND dm_delete_yn = 'N' AND dm_level < 6 AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.dt) AS total_count
+				    , (SELECT COUNT(dm_id) FROM dm_member WHERE dm_status = 'L' AND dm_delete_yn = 'N' AND dm_level < 6 AND DATE_FORMAT(dm_leave_date, '%Y-%m-%d') = a.dt) AS leave_count
+			  FROM  (
+					  SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS dt
+					  FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+					  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+					  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+					  CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+			         ) a
+			where 1=1
+			AND a.dt BETWEEN #{search_start_date} AND #{search_end_date}
+			ORDER BY a.dt
+		]]>
+	</select>
+</mapper>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.display.PageMapper">
+	<resultMap id="resultPageVO" type="egovframework.diam.biz.model.display.Dm_pages_vo">
+	</resultMap>
+	
+	<sql id="selectPageListWhere">
+		AND	A.dm_status = '1'
+		<if test='search_domain != "" and search_domain != null'>
+			AND	A.dm_domain = #{search_domain}
+		</if>
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_page_name"'>
+					AND	A.dm_page_name LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "dm_uid"'>
+					AND	A.dm_uid LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_uid LIKE CONCAT ('%', #{search_value} , '%') 
+						OR A.dm_page_name LIKE CONCAT ('%', #{search_value} , '%')						
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_nm != "" and search_nm != null'>
+			AND	A.dm_page_name LIKE CONCAT('%', #{search_nm} ,'%')
+		</if>
+		<if test='search_status != "" and search_status != null'>
+			<choose>
+				<when test='search_status == "table"'>
+					AND	(A.dm_main_content != '1' OR A.dm_main_content IS NULL)
+		 			AND	dm_page_type IN ('PAGE', 'BOARD', 'FAQ')
+				</when>
+				<otherwise>
+					AND	A.dm_status = #{search_status}
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="selectPageListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_pages A
+		 INNER JOIN (SELECT dm_id FROM dm_domain_list WHERE dm_delete_yn = 'N') B
+		 ON A.dm_domain = B.dm_id
+		 WHERE	1=1
+		 <include refid="selectPageListWhere"/>
+	</select>
+	
+	<select id="selectPageList" resultMap="resultPageVO">
+		SELECT	*
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = "1001" AND A.dm_status = dm_code_value) as dm_status_text
+			 ,	IFNULL((SELECT	dm_domain_nm FROM dm_domain_list WHERE A.dm_domain = dm_id AND dm_domain_status = '1'), '도메인정보없음') as dm_domain_text
+			 ,	(SELECT dm_url FROM dm_config WHERE dm_domain_id = A.dm_domain) as dm_domain_url
+		 FROM	dm_pages A
+		INNER JOIN (SELECT dm_id FROM dm_domain_list WHERE dm_delete_yn = 'N') B
+		ON A.dm_domain = B.dm_id
+		WHERE	1=1
+		  AND   A.dm_delete_yn = 'N'
+		<include refid="selectPageListWhere"/>
+		LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectPage" resultMap="resultPageVO">
+		SELECT	*
+			 ,	IFNULL((SELECT	dm_domain_nm FROM dm_domain_list WHERE A.dm_domain = dm_id AND dm_domain_status = '1'), '도메인정보없음') as dm_domain_text
+		  FROM	dm_pages A
+		 WHERE	A.dm_id = #{dm_id}
+	</select>
+	
+	<select id="selectPageDmUid" resultMap="resultPageVO">
+		SELECT	*
+		  FROM	dm_pages
+		 WHERE	dm_uid = #{dm_uid}
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_status = '1'
+	</select>
+	
+	<select id="selectPageMainContent" resultMap="resultPageVO">
+		SELECT	*
+		  FROM	dm_pages
+		 WHERE	dm_main_content = 1
+		   AND	dm_status = '1'
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_domain = #{dm_domain}
+	</select>
+		
+	<select id="selectPageHistory" resultMap="resultPageVO">
+		SELECT	*
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = "1001" AND A.dm_status = dm_code_value) as dm_status_text	
+		  FROM	dm_pages A
+		 WHERE	dm_uid = #{dm_uid}
+		   AND  A.dm_delete_yn = 'N'
+	  ORDER BY	dm_version DESC
+	</select>
+	
+	<select id="selectPageVersion" resultType="string">
+		SELECT	max(dm_version)
+		  FROM	dm_pages
+		 WHERE	dm_uid = #{dm_uid}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<update id="updatePageDmStatus">
+		UPDATE	dm_pages
+		   SET	dm_status = '0'
+		 WHERE	dm_uid = #{dm_uid}
+	</update>
+		
+	<insert id="insertPage">
+		INSERT
+		  INTO	dm_pages
+		  	 (	dm_id
+		  	 ,	dm_uid
+		  	 ,	dm_file_name
+		  	 ,	dm_file_src
+		  	 ,	dm_page_name
+		  	 ,	dm_page_type
+		  	 ,	dm_board_id
+		  	 ,	dm_version
+		  	 ,	dm_status
+		  	 ,	dm_create_dt
+		  	 ,	dm_create_id
+		  	 ,	dm_main_content
+		  	 ,	dm_domain
+		  	 )
+	    VALUES
+	    	 (	null
+	    	 ,	#{dm_uid}
+	    	 ,	#{dm_file_name}
+	    	 ,	#{dm_file_src}
+	    	 ,	#{dm_page_name}
+	    	 ,	#{dm_page_type}
+	    	 ,	#{dm_board_id}
+	    	 ,	#{dm_version}
+	    	 ,	#{dm_status}
+	    	 ,	now()
+	    	 ,	#{dm_create_id}
+	    	 ,	#{dm_main_content}
+	    	 ,	#{dm_domain}
+	    	 )
+	</insert>
+	
+	<update id="updatePage">
+		UPDATE  dm_pages
+		   SET  dm_main_content = #{dm_main_content}
+		      , dm_page_name = #{dm_page_name}
+		      , dm_board_id = #{dm_board_id}
+		      , dm_modify_dt = now()
+		      , dm_modify_id = #{dm_modify_id}
+		 WHERE  dm_id = #{dm_id}
+	</update>
+	
+	<update id="updatePageDmStatusByDmuid">
+		UPDATE	dm_pages
+		   SET	dm_status = '0'
+		 WHERE	dm_uid = #{dm_uid}
+	</update>
+	
+	<update id="updatePageDmStatusByDmid">
+		UPDATE	dm_pages
+		   SET	dm_status = '1'
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<update id="deletePage">
+		UPDATE	dm_pages
+		   SET  dm_delete_dt = now()
+		      , dm_delete_id = #{dm_delete_id}
+		      , dm_delete_yn = 'Y'
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectPageListCombo"  resultMap="resultPageVO">
+		SELECT	*
+    	 FROM	dm_pages
+    	WHERE	1=1
+    	  AND   dm_delete_yn = 'N'
+    	  AND	dm_status = '1'
+    	  AND	(dm_main_content != '1' OR dm_main_content IS NULL)
+    	  AND	dm_page_type IN ('PAGE', 'BOARD', 'FAQ')
+    	<if test='search_domain != null and search_domain != ""'>
+    	  AND	dm_domain = #{search_domain}
+    	</if>
+    </select>
+	
+	<select id="selectPageMainCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_pages
+		 WHERE	dm_main_content = 1
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_status = '1'
+		   AND	dm_uid != #{dm_uid}
+		   AND	dm_domain = #{dm_domain}
+	</select>
+	
+	<select id="selectPageBoardChk" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_pages
+		 WHERE	dm_status = '1'
+		   AND	dm_uid != #{dm_uid}
+		   AND	dm_board_id = #{dm_board_id}
+		   AND   dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectPageDmUidCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_pages
+		 WHERE	dm_uid= #{dm_uid}
+		   AND   dm_delete_yn = 'N'
+		   AND	dm_domain = #{dm_domain}
+	</select>
+	
+	<select id="selectPageMaxVersionByDmUid" resultType="string">
+		SELECT	MAX(dm_version)
+		  FROM	dm_pages
+		 WHERE	dm_uid = #{dm_uid}
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_version &lt; (SELECT MAX(dm_version) FROM dm_pages WHERE dm_uid = #{dm_uid})
+	</select>
+	
+	<update id="updatePageDmStatusAfterDel">
+		UPDATE	dm_pages
+		   SET	dm_status = '1'
+		 WHERE	dm_uid = #{dm_uid}
+		   AND	dm_version = #{dm_version}
+	</update>
+	
+	<select id="selectPageByVersion" resultMap="resultPageVO">
+		SELECT	*
+		  FROM	dm_pages
+		 WHERE	dm_version = #{dm_version}
+		   AND	dm_uid = #{dm_uid}
+		   AND  dm_delete_yn = 'N'
+	</select>
+
+	<select id="selectPageUtilCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_pages
+		 WHERE	dm_status = '1'
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_page_type = #{dm_page_type}
+		   AND	dm_uid != #{dm_uid}
+		   AND	dm_domain = #{dm_domain}
+	</select>	
+	
+	<select id="selectPageUtilUid" parameterType="String" resultType="String">
+		SELECT	dm_uid
+		  FROM	dm_pages
+		 WHERE	dm_status = '1'
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_domain = #{param1}
+		   AND	dm_page_type = #{param2}
+	</select>
+</mapper>

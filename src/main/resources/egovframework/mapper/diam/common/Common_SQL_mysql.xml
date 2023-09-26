@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.CommonMapper">
+	<resultMap id="resultCommonCodeVO" type="egovframework.diam.cmm.model.Dm_common_code_vo"/>
+	<select id="selectDm_common_code" resultMap="resultCommonCodeVO">
+		SELECT * FROM dm_common_code
+		WHERE 1 = 1
+		AND dm_delete_yn = 'N'
+		<if test="dm_code_id != null and dm_code_id != ''">
+		AND dm_code_id = #{dm_code_id}
+		</if>
+		<if test="dm_code_group != null and dm_code_group != ''">
+		AND dm_code_group = #{dm_code_group}
+		</if>
+		<if test="dm_code_value != null and dm_code_value != ''">
+		AND dm_code_value = #{dm_code_value}
+		</if>
+		<if test="dm_code_name != null and dm_code_name != ''">
+		AND dm_code_name = #{dm_code_name}
+		</if>
+		<if test="dm_code_asc != null and dm_code_asc != ''">
+		AND dm_code_asc = #{dm_code_asc}
+		</if>
+		<if test="dm_code_var_name != null and dm_code_var_name != ''">
+		AND dm_code_var_name = #{dm_code_var_name}
+		</if>
+		<if test="dm_code_desc != null and dm_code_desc != ''">
+		AND dm_code_desc = #{dm_code_desc}
+		</if>
+		ORDER BY dm_code_group ASC, dm_code_asc ASC
+	</select>
+	
+	<resultMap id="resultBoardVO" type="egovframework.diam.biz.model.board.Dm_board_vo"/>
+	<select id='selectBoardListAll' resultMap='resultBoardVO'>
+		SELECT	A.dm_id
+			 ,	A.dm_subject
+			 ,	A.dm_table
+		  FROM	dm_board A
+		INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+		 WHERE  A.dm_delete_yn = 'N'
+		<if test='dm_domain != "" and dm_domain != null'>
+		   AND  A.dm_domain = #{dm_domain}		
+		</if>
+	</select>
+	
+	<resultMap id="resultDomainVO" type="egovframework.diam.biz.model.config.Dm_domain_list_vo"/>
+	<select id="selectDomainList" resultMap="resultDomainVO">
+		SELECT	*
+		  FROM	dm_domain_list
+		 WHERE	dm_domain_status = '1'
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<resultMap id="resultLayoutVO" type="egovframework.diam.biz.model.display.Dm_layout_vo"/>
+	<select id="selectLayoutList" resultMap="resultLayoutVO">
+		SELECT dm_layout_nm, dm_id
+		  FROM dm_layout
+		 WHERE 1=1
+		   AND dm_delete_yn = 'N'
+	</select>
+</mapper>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.config.ConfigMapper">
+<resultMap id="resultConfigVO" type="egovframework.diam.biz.model.config.Dm_config_vo"></resultMap>
+	<select id="selectDmConfig" resultMap="resultConfigVO">
+		SELECT	*
+		  FROM	dm_config
+		 WHERE	dm_domain_id = #{dm_domain_id}
+	</select>	
+ 	<insert id="insertDmConfig"> 
+		INSERT
+		  INTO	dm_config 
+		  	 (	dm_domain_id
+		  	 ,	dm_site_name
+		  	 ,	dm_url
+		  	 ,	dm_title
+		  	 ,	dm_company_name
+		  	 ,	dm_company_number
+		  	 ,	dm_tel_company_number
+		  	 ,	dm_ceo
+		  	 ,	dm_ceo_email
+		  	 ,	dm_zip
+		  	 ,	dm_addr1
+		  	 ,	dm_addr2
+		  	 ,	dm_addr3
+		  	 ,	dm_tel
+		  	 ,	dm_fax
+		  	 ,	dm_meta_desc
+		  	 ,	dm_meta_keyword
+		  	 ,	dm_naver_site_verification
+		  	 ,	dm_top_logo
+		  	 ,	dm_top_logo_name
+		  	 ,	dm_bottom_logo
+		  	 ,	dm_bottom_logo_name
+		  	 ,	dm_personal_image
+		  	 ,	dm_personal_image_original_name
+		  	 ,  dm_theme
+		  	 ) 
+ 		VALUES
+ 			 (	#{dm_domain_id}
+ 			 ,	#{dm_site_name}
+ 			 ,	#{dm_url}
+ 			 ,	#{dm_title}
+ 			 ,	#{dm_company_name}
+ 			 ,	#{dm_company_number}
+ 			 ,	#{dm_tel_company_number}
+ 			 ,	#{dm_ceo}
+ 			 ,	#{dm_ceo_email}
+ 			 ,	#{dm_zip}
+ 			 ,	#{dm_addr1}
+ 			 ,	#{dm_addr2}
+ 			 ,	#{dm_addr3}
+ 			 ,	#{dm_tel}
+ 			 ,	#{dm_fax}
+ 			 ,	#{dm_meta_desc}
+ 			 ,	#{dm_meta_keyword}
+ 			 ,	#{dm_naver_site_verification}
+ 			 ,	#{dm_top_logo}
+ 			 ,	#{dm_top_logo_name}
+ 			 ,	#{dm_bottom_logo}
+ 			 ,	#{dm_bottom_logo_name}
+ 			 ,	#{dm_personal_image}
+ 			 ,	#{dm_personal_image_original_name}
+ 			 ,  #{dm_theme}
+ 			 ) 
+	</insert> 
+	<update id="updateDmConfig">
+		UPDATE	dm_config
+		   SET	dm_domain_id = #{dm_domain_id}
+		   	 ,	dm_site_name = #{dm_site_name}
+		   	 ,	dm_url = #{dm_url}
+		   	 ,	dm_title = #{dm_title}
+		   	 ,	dm_company_name = #{dm_company_name}
+		   	 ,	dm_company_number = #{dm_company_number}
+		   	 ,	dm_tel_company_number = #{dm_tel_company_number}
+		   	 ,	dm_ceo = #{dm_ceo}
+		   	 ,	dm_ceo_email = #{dm_ceo_email}
+		   	 ,	dm_zip = #{dm_zip}
+		   	 ,	dm_addr1 = #{dm_addr1}
+		   	 ,	dm_addr2 = #{dm_addr2}
+		   	 ,	dm_addr3 = #{dm_addr3}
+		   	 ,	dm_tel = #{dm_tel}
+		   	 ,	dm_fax = #{dm_fax}
+		   	 ,	dm_top_logo = #{dm_top_logo}
+		   	 ,	dm_top_logo_name = #{dm_top_logo_name}
+		   	 ,	dm_bottom_logo = #{dm_bottom_logo}
+		   	 ,	dm_bottom_logo_name = #{dm_bottom_logo_name}
+		   	 ,  dm_meta_desc = #{dm_meta_desc}
+		   	 ,  dm_meta_keyword = #{dm_meta_keyword}
+		   	 ,  dm_naver_site_verification = #{dm_naver_site_verification}
+		   	 ,  dm_personal_image = #{dm_personal_image}
+		   	 ,  dm_personal_image_original_name = #{dm_personal_image_original_name}
+		   	 ,  dm_theme = #{dm_theme}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectDmConfigByUrl" resultMap="resultConfigVO">
+		SELECT	*
+		  FROM	dm_config A, dm_domain_list B
+		 WHERE	A.dm_url = #{dm_url}
+		   AND	A.dm_domain_id = B.dm_id
+		   AND	B.dm_domain_status = '1'
+		   AND  B.dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectDmConfigDuplicate" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_config
+		 WHERE	dm_domain_id = #{dm_domain_id}
+	</select>
+	
+	<select id="selectDmConfigDuplicateUrl" resultType="integer">
+		SELECT COUNT(dm_id)
+		  FROM dm_config
+		 WHERE 1=1
+		   AND dm_url = #{dm_url}
+		<if test='dm_id != null and dm_id != ""'>
+			AND dm_id != #{dm_id}
+		</if>
+	</select>
+	
+	<update id="updateDmPage">
+		UPDATE  dm_config
+		   SET  dm_policy_status = #{dm_policy_status}
+		     ,  dm_policy_text = #{dm_policy_text}
+		     ,  dm_private_status = #{dm_private_status}
+		     ,  dm_private_text = #{dm_private_text}
+		     ,  dm_reject_status = #{dm_reject_status}
+		     ,  dm_reject_text = #{dm_reject_text}
+		 WHERE  dm_domain_id = #{dm_domain_id}
+	</update>
+</mapper>

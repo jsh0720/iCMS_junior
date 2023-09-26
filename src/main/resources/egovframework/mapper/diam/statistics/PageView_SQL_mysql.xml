@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.PageViewMapper">
+
+	<resultMap id="resultWebLogVO" type="egovframework.diam.biz.model.statistics.Dm_page_view_vo">
+	</resultMap>
+	
+	<sql id="webLogWhere">
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(STR_TO_DATE(#{search_start_date},'%Y-%m-%d'),'%Y-%m-%d')
+		</if>
+		<if test="search_end_date != null and search_end_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(STR_TO_DATE(#{search_end_date},'%Y-%m-%d'),'%Y-%m-%d')
+		</if>
+	</sql>
+	
+	<select id="selectPageViewLogPvStatisticsList" resultMap="resultWebLogVO">
+		SELECT   *,
+		         COUNT(*) AS page_count
+		FROM     dm_web_log
+		WHERE    (
+		                  dm_type <![CDATA[<>]]> '관리자페이지'
+		         AND      dm_type != '')
+		         AND dm_domain = #{dm_domain}
+		         <include refid="webLogWhere"/>
+		GROUP BY dm_type
+		ORDER BY page_count DESC
+	</select>
+</mapper>

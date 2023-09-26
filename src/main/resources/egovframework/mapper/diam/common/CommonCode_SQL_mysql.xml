@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.CommonCodeMapper">
+	<resultMap id="resultCommonCodeVO" type="egovframework.diam.cmm.model.Dm_common_code_vo">
+	</resultMap>
+	
+	<sql id="selectCommonCodeListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_code_group"'>
+					AND	dm_code_group LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_code_value"'>
+					AND	dm_code_value LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_code_desc"'>
+					AND	dm_code_desc LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_code_name"'>
+					AND	dm_code_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	( 
+						dm_code_group LIKE CONCAT('%', #{search_value} ,'%') OR 
+						dm_code_value LIKE CONCAT('%', #{search_value} ,'%') OR 
+						dm_code_desc LIKE CONCAT('%', #{search_value} ,'%') OR
+						dm_code_name LIKE CONCAT('%', #{search_value} ,'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="selectCommonCodeListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_common_code
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectCommonCodeListWhere"/>
+	</select>
+	
+	<select id="selectCommonCodeList" resultMap="resultCommonCodeVO">
+		SELECT	*
+		  FROM	dm_common_code
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectCommonCodeListWhere"/>
+	  ORDER BY	dm_code_group desc, dm_code_asc
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectCommonCode" resultMap="resultCommonCodeVO">
+		SELECT	* 
+		  FROM	dm_common_code
+		 WHERE	dm_code_id = #{dm_code_id}
+	</select>
+	
+	<update id="deleteCommonCode">
+		UPDATE	dm_common_code
+		   SET	dm_delete_id = #{dm_delete_id}
+			 ,	dm_delete_dt = now()
+			 ,	dm_delete_yn = 'Y'
+		 WHERE	dm_code_id = #{dm_code_id}
+	</update>
+	
+	<insert id="insertCommonCode">
+		INSERT
+		  INTO	dm_common_code
+		  	 (	dm_code_id,
+		  	 	dm_code_group,
+		  	 	dm_code_value,
+		  	 	dm_code_name,
+		  	 	dm_code_asc,
+		  	 	dm_code_var_name,
+		  	 	dm_code_desc,
+		  	 	dm_create_dt,
+		  	 	dm_create_id
+		  	 )
+		VALUES
+			 (	#{dm_code_id},
+			 	#{dm_code_group},
+			 	#{dm_code_value},
+			 	#{dm_code_name},
+			 	#{dm_code_asc},
+			 	#{dm_code_var_name},
+			 	#{dm_code_desc},
+			 	now(),
+			 	#{dm_create_id}
+			 )
+	</insert>
+	
+	<update id="updateCommonCode">
+		UPDATE	dm_common_code
+		   SET	dm_code_group = #{dm_code_group}
+			 ,	dm_code_value = #{dm_code_value}
+			 ,	dm_code_name = #{dm_code_name}
+			 ,	dm_code_asc = #{dm_code_asc}
+			 ,	dm_code_var_name = #{dm_code_var_name}
+			 ,	dm_code_desc = #{dm_code_desc}
+			 ,  dm_modify_dt = now()
+			 ,  dm_modify_id = #{dm_modify_id}
+		 WHERE	dm_code_id = #{dm_code_id}
+	</update>
+	
+	<select id="selectCommonCodeValueDup" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_common_code
+		 WHERE	dm_code_group = #{dm_code_group}
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_code_value = #{dm_code_value}
+		   <if test="dm_code_id != null and dm_code_id != ''">
+		   AND	dm_code_id != #{dm_code_id}
+		   </if>
+	</select>
+	
+	<select id="selectCommonCodeNameDup" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_common_code
+		 WHERE	dm_code_group = #{dm_code_group}
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_code_name = #{dm_code_name}
+		   <if test="dm_code_id != null and dm_code_id != ''">
+		   AND	dm_code_id != #{dm_code_id}
+		   </if>
+	</select>
+	
+	<select id="selectCodeNameByValue" resultMap="resultCommonCodeVO">
+		SELECT *
+		  FROM dm_common_code
+		 WHERE dm_code_group = #{dm_code_group}
+		   AND dm_delete_yn = 'N'
+		   AND dm_code_value = #{dm_code_value}
+	</select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.SearchMapper">
+	<resultMap id="boardVOResultMap" type="egovframework.diam.biz.model.board.Dm_board_vo">
+	</resultMap>
+	<resultMap id="writeVOResultMap" type="egovframework.diam.biz.model.board.Dm_write_vo">
+	</resultMap>
+	<resultMap id="pageVOResultMap" type="egovframework.diam.biz.model.display.Dm_pages_vo">
+	</resultMap>
+	
+	<sql id="selectWriteListWhere">
+		AND (wr_subject LIKE CONCAT('%', #{search_value}, '%') OR wr_content LIKE CONCAT('%', #{search_value}, '%') OR wr_name LIKE CONCAT('%', #{search_value}, '%'))
+		ORDER BY wr_datetime DESC
+	</sql>
+	
+	<select id="selectBoardList" resultMap="boardVOResultMap">
+		SELECT  a.*
+			 ,	b.dm_uid
+		  FROM  dm_board a, dm_pages b
+		 WHERE  1=1
+		   AND  a.dm_id = b.dm_board_id
+		   AND  b.dm_board_id > 0
+		   AND  b.dm_status = '1'
+		   AND  a.dm_delete_yn = 'N'
+		   AND  b.dm_delete_yn = 'N'
+		   AND  a.dm_domain = #{dm_domain}
+	</select>
+	
+	<select id="selectWriteList" resultMap="writeVOResultMap">
+		SELECT  a.wr_subject as wr_subject,
+	            a.wr_content as wr_content, 
+	            a.wr_name as wr_name, 
+	            a.mb_id as mb_id, 
+	            a.wr_id as wr_id, 
+	            a.wr_datetime as wr_datetime, 
+	            a.wr_hit as wr_hit, 
+	            a.wr_is_comment as wr_is_comment,
+	            a.wr_option as wr_option,
+	            a.wr_parent as wr_parent
+		  FROM  dm_write a
+		 WHERE  1=1
+		   AND  a.dm_delete_yn = 'N'
+		   AND  a.wr_reply = '0'
+		   AND  a.wr_is_comment = '0'
+		   AND  a.wr_board = #{dm_id}
+		 <include refid="selectWriteListWhere"/>
+	</select>
+	
+	<select id="selectWriteListCnt" resultType="int">
+		<bind name="table" value="dm_table"/>
+		SELECT  COUNT(*)
+		  FROM  dm_write a
+		 WHERE  1=1
+		   AND  a.dm_delete_yn = 'N'
+		   AND  a.wr_reply = '0'
+		   AND  a.wr_is_comment = '0'
+		   AND  a.wr_board = #{dm_id}
+		 <include refid="selectWriteListWhere"/>
+	</select>
+</mapper>

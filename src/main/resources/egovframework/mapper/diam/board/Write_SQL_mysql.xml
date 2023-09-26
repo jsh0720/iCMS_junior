@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.board.WriteMapper">
+	<resultMap id="resultWriteVO" type="egovframework.diam.biz.model.board.Dm_write_vo">
+	</resultMap>
+	
+	<sql id="selectWriteListWhere">
+		<if test="type != 'comment'">
+			AND	A.wr_is_comment = 0
+		</if>
+		AND	A.wr_reply = 0
+   		<if test='search_value != "" and search_value != null'>
+   			<choose>
+				<when test='search_type == "wr_subject"'>
+					AND	A.wr_subject LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "wr_content"'>
+					AND	A.wr_content LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "wr_name"'>
+					AND	A.wr_name LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<otherwise>
+					AND	(
+						A.wr_subject LIKE CONCAT ('%', #{search_value} , '%') 
+						OR A.wr_content LIKE CONCAT ('%', #{search_value} , '%')
+						OR A.wr_name LIKE CONCAT ('%', #{search_value} , '%')
+					)
+				</otherwise>
+			</choose>
+   		</if>
+   		<if test='search_start_date != "" and search_start_date != null'>
+			AND	DATE_FORMAT(A.wr_datetime, '%Y-%m-%d') &gt;= STR_TO_DATE(#{search_start_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_end_date != "" and search_end_date != null'>
+			AND	DATE_FORMAT(A.wr_datetime, '%Y-%m-%d') &lt;= STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_board != "" and search_board != null'>
+			AND A.wr_board = #{search_board}
+		</if>
+		<if test='search_cate != null and search_cate != ""'>
+			AND A.ca_name LIKE CONCAT('%', #{search_cate} ,'%')
+		</if>
+	</sql>
+	
+	<select id="selectWriteList" resultMap="resultWriteVO">
+		  	SELECT  A.* 
+			  	  , B.dm_table AS dm_table
+			  	  , B.dm_subject AS dm_table_text
+			      , (SELECT COUNT(wr_id) FROM dm_write WHERE wr_num = A.wr_num AND wr_reply &gt; 0 AND dm_delete_yn = 'N') AS re_count
+			      , (SELECT COUNT(wr_id) FROM dm_write WHERE wr_num = A.wr_num AND wr_is_comment = 1 AND dm_delete_yn = 'N') AS com_count
+			  FROM  dm_write AS A
+		INNER JOIN  (SELECT dm_table, dm_subject, dm_id FROM dm_board WHERE dm_delete_yn = 'N') AS B
+				ON  A.wr_board = B.dm_id
+			 WHERE  1=1
+			   AND  A.dm_delete_yn = 'N'
+    	<include refid="selectWriteListWhere"/>
+    	  ORDER BY  <if test='type == "web"'>
+    	  			  A.wr_is_notice DESC ,
+    	  			</if>
+    	  			A.wr_datetime DESC
+             LIMIT  #{page}, #{rows}
+	</select>
+	
+	<select id="selectWriteListCnt" resultType="int">
+		SELECT	COUNT(wr_id)
+		  FROM	dm_write AS A
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		 <include refid="selectWriteListWhere"/>
+	</select>
+	
+	<select id="selectWrite" resultMap="resultWriteVO">
+		<![CDATA[
+			SELECT	*
+				  ,	(SELECT COUNT(*) FROM dm_write WHERE wr_is_comment = 1 AND wr_num = A.wr_num) AS com_count
+				  , B.dm_table AS dm_table
+				  , B.dm_subject AS dm_table_text
+				  ,	(SELECT mb_id FROM dm_write WHERE wr_num = A.wr_num AND wr_reply = 0 AND wr_is_comment = 0) AS ori_mb_id
+				  , (SELECT wr_id FROM dm_write WHERE wr_board = A.wr_board AND wr_id = wr_parent AND wr_datetime < A.wr_datetime AND dm_delete_yn = 'N' ORDER BY wr_datetime DESC LIMIT 1) AS prev_id
+				  , (SELECT wr_subject FROM dm_write WHERE wr_board = A.wr_board AND wr_id = wr_parent AND wr_datetime < A.wr_datetime AND dm_delete_yn = 'N' ORDER BY wr_datetime DESC LIMIT 1) AS prev_subject
+				  , (SELECT wr_id FROM dm_write WHERE wr_board = A.wr_board AND wr_id = wr_parent AND wr_datetime > A.wr_datetime AND dm_delete_yn = 'N' ORDER BY wr_datetime ASC LIMIT 1) AS next_id
+				  , (SELECT wr_subject FROM dm_write WHERE wr_board = A.wr_board AND wr_id = wr_parent AND wr_datetime > A.wr_datetime AND dm_delete_yn = 'N' ORDER BY wr_datetime ASC LIMIT 1) AS next_subject
+		  	  FROM	dm_write A
+		INNER JOIN  (SELECT dm_table, dm_subject, dm_id FROM dm_board WHERE dm_delete_yn = 'N') AS B
+				ON  A.wr_board = B.dm_id
+		 	 WHERE	A.wr_id = #{wr_id}
+		]]>
+	</select>
+	
+	<insert id="insertWrite" useGeneratedKeys="true" keyProperty="wr_id">
+		INSERT 
+		  INTO	dm_write (
+		  	<if test="wr_num != null and wr_num != ''">
+		  		wr_num,
+		  	</if>
+		  	wr_board,
+		  	wr_reply,
+			wr_reply_reply,
+			wr_parent,
+			wr_is_comment,
+			wr_comment,
+			wr_comment_reply,
+			ca_name,
+			wr_option,
+			wr_subject,
+			wr_content,
+			wr_link1,
+			wr_link2,
+			wr_hit,
+			wr_is_notice,
+			mb_id,
+			reply_mb_id,
+			wr_password,
+			wr_name,
+			wr_datetime,
+			wr_file,
+			wr_ori_file_name,
+			wr_ip,
+			dm_create_dt
+		) VALUE (
+			<if test="wr_num != null and wr_num != ''">
+		  		#{wr_num},
+		  	</if>
+		  	#{wr_board},
+			#{wr_reply},
+			#{wr_reply_reply},
+			#{wr_parent},
+			#{wr_is_comment},
+			#{wr_comment},
+			#{wr_comment_reply},
+			#{ca_name},
+			#{wr_option},
+			#{wr_subject},
+			#{wr_content},
+			#{wr_link1},
+			#{wr_link2},
+			'0',
+			#{wr_is_notice},
+			#{mb_id},
+			#{reply_mb_id},
+			#{wr_password},
+			#{wr_name},
+			now(),
+			#{wr_file},
+			#{wr_ori_file_name},
+			#{wr_ip}
+			,now()
+		)
+	</insert>
+	
+	<update id="updateWrnumParent" parameterType="egovframework.diam.biz.model.board.Dm_write_vo">
+		UPDATE	dm_write
+		   SET	wr_num = CAST(#{wr_id} AS signed) * -1
+		     ,	wr_parent = #{wr_id}
+		 WHERE	wr_id= #{wr_id}
+	</update>
+	
+	<update id="updateWriteMove">
+		UPDATE  dm_write
+		   SET  wr_board = #{wr_board}
+		      , ca_name = ''
+		      , wr_option = ''
+		      , dm_modify_id = #{dm_modify_id}
+		      , dm_modify_dt = now()
+		 WHERE  wr_id = #{wr_id}
+	</update>
+
+	<update id="updateWrite">
+		UPDATE	dm_write
+		   SET	
+		   		ca_name = #{ca_name},		   		
+				wr_option = #{wr_option},  
+				wr_subject = #{wr_subject}, 
+				wr_content = #{wr_content}, 
+				wr_link1 = #{wr_link1}, 
+				wr_link2 = #{wr_link2}, 
+				wr_is_notice = #{wr_is_notice}, 
+				<if test='wr_password != null and wr_password != ""'>
+				wr_password = #{wr_password}, 
+				</if>
+				wr_name = #{wr_name}, 
+				wr_file = #{wr_file}, 
+				wr_ori_file_name = #{wr_ori_file_name}
+		 WHERE	wr_id = #{wr_id}
+	</update>
+	
+	<update id="deleteWrite">
+		UPDATE	dm_write
+		   SET  dm_delete_id = #{dm_delete_id}
+		      , dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		 WHERE	wr_id = #{wr_id}
+	</update>
+	
+	<update id="deleteWriteBoth">
+		UPDATE	dm_write
+		   SET  dm_delete_id = #{dm_delete_id}
+		      , dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		 WHERE	wr_num = #{wr_num}
+		   AND  dm_delete_yn = 'N'
+	</update>
+	
+	<select id="selectWriteReplyCount" resultType="integer">
+		<![CDATA[
+			SELECT COUNT(wr_id)
+			  FROM dm_write
+			 WHERE 1=1
+			   AND wr_reply > 0
+			   AND dm_delete_yn = 'N'
+			   AND wr_num = #{wr_num}
+		]]>
+	</select>
+		
+	<select id="selectWriteCommentReplyCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_write
+		 WHERE	(wr_is_comment = 1 OR wr_reply &gt; 0)
+		   AND	wr_num = (CAST(#{wr_id} AS signed) * -1)
+	</select>
+	<sql id="selectWriteListWhereForWeb">
+   		<if test='search_value != "" and search_value != null'>
+   			<choose>
+				<when test='search_type == "wr_subject"'>
+					AND	A.wr_subject LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "wr_content"'>
+					AND	A.wr_content LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "wr_name"'>
+					AND	A.wr_name LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<otherwise>
+					AND	(
+						A.wr_subject LIKE CONCAT ('%', #{search_value} , '%') 
+						OR A.wr_content LIKE CONCAT ('%', #{search_value} , '%')
+						OR A.wr_name LIKE CONCAT ('%', #{search_value} , '%')
+					)
+				</otherwise>
+			</choose>
+   		</if>
+		<if test='search_board != "" and search_board != null'>
+			AND A.wr_board = #{search_board}
+		</if>
+		<if test='search_cate != null and search_cate != ""'>
+			AND A.ca_name LIKE CONCAT('%', #{search_cate} ,'%')
+		</if>
+	</sql>
+	<select id="selectWriteListForWeb" resultMap="resultWriteVO">
+		  SELECT  A.*
+		        , CASE WHEN A.wr_id = A.wr_parent THEN (SELECT COUNT(wr_id) FROM dm_write WHERE wr_num = A.wr_num AND wr_is_comment = 1 AND dm_delete_yn = 'N') ELSE 0 END AS com_count
+		    FROM  dm_write AS A
+		   WHERE  1 = 1
+			 AND  A.wr_is_comment = 0
+			 AND  A.dm_delete_yn = 'N'
+			 AND  (A.wr_is_notice IS NULL OR A.wr_is_notice != '1')
+		<include refid="selectWriteListWhereForWeb"/>
+		ORDER BY  A.wr_is_notice DESC, A.wr_num ASC, A.wr_reply_reply *1 ASC
+		   LIMIT  #{page}, #{rows}
+	</select>
+	<select id="selectWriteCountForWeb" resultType="integer">
+		SELECT  COUNT(A.wr_id) 
+		  FROM  dm_write AS A
+		 WHERE  1 = 1
+		   AND  A.wr_is_comment = 0
+		   AND  A.dm_delete_yn = 'N'
+		   AND  (A.wr_is_notice IS NULL OR A.wr_is_notice != '1')
+		<include refid="selectWriteListWhereForWeb"/>
+	</select>
+	<select id="selectWriteNoticeForWeb" resultMap="resultWriteVO">
+		SELECT  A.*
+	          , (SELECT COUNT(wr_id) FROM dm_write WHERE wr_num = A.wr_num AND wr_reply > 0 AND dm_delete_yn = 'N') AS re_count
+		      , (SELECT COUNT(wr_id) FROM dm_write WHERE wr_num = A.wr_num AND wr_is_comment = 1 AND dm_delete_yn = 'N') AS com_count
+	      FROM  dm_write AS A
+	     WHERE  A.wr_is_notice = '1'
+		   AND  A.dm_delete_yn = 'N'
+		   AND  A.wr_is_comment = 0
+		   AND  A.wr_reply = 0
+		<include refid="selectWriteListWhereForWeb"/>
+		ORDER BY A.wr_datetime DESC
+		LIMIT 5
+	</select>
+	<select id="selectReplyListForWeb" resultMap="resultWriteVO">
+		<![CDATA[
+			SELECT	a.*
+				 ,	(SELECT mb_id FROM dm_write WHERE wr_num = a.wr_num AND wr_reply = 0 AND wr_is_comment = 0) AS ori_mb_id
+			  FROM	dm_write a
+			 WHERE	wr_reply > 0
+			   AND	wr_is_comment != 1
+			   AND	wr_num = #{wr_num}
+		  ORDER BY  wr_reply_reply * 1
+		]]>
+	</select>
+	
+	<select id="selectWriteCheckPassword" resultMap="resultWriteVO">
+		SELECT	*
+		  FROM	dm_write
+		 WHERE	wr_id = #{wr_id}
+		   AND	wr_password = #{wr_password}
+	</select>
+	
+	<update id="updateWriteHits">
+		UPDATE	dm_write
+		   SET	wr_hit = wr_hit + CAST(#{wr_hit} AS UNSIGNED)
+		 WHERE	wr_id = #{wr_id}
+	</update>
+	
+	<select id="selectWriteOri" resultMap="resultWriteVO">
+		SELECT	*
+		  FROM	dm_write
+		 WHERE	wr_num = #{wr_num}
+		   AND	wr_reply = 0
+		   AND	wr_is_comment = 0
+	</select>
+	
+	<select id="selectMaxReplyReply" resultType="int">
+		SELECT IFNULL(MAX(CAST(wr_reply_reply as unsigned)), (SELECT wr_reply_reply FROM dm_write WHERE wr_id = #{wr_parent}))
+		  FROM dm_write
+		 WHERE wr_parent = #{wr_parent}
+	</select>
+	
+	<update id="updateReplyReply">
+		<![CDATA[
+			UPDATE	dm_write
+			   SET	wr_reply_reply = wr_reply_reply + 1
+			 WHERE	wr_num = #{wr_num}
+			   AND	wr_reply_reply >= #{wr_reply_reply}
+			   AND  wr_id != #{wr_id}
+		]]>
+	</update>
+	
+	<select id="selectMaxCommentReply" resultType="int">
+		SELECT	IFNULL(MAX(CAST(wr_comment_reply as unsigned)), 0)
+		  FROM	dm_write
+		 WHERE	wr_num = #{wr_num}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<resultMap id="resultComment" type="egovframework.diam.biz.model.board.Dm_write_vo">
+		<id property="wr_id" column="wr_id"/>
+		<collection property="children" column="wr_id" javaType="java.util.ArrayList" ofType="egovframework.diam.biz.model.board.Dm_write_vo" select="selectChildComment"/>
+	</resultMap>
+	
+	<select id="selectParentComment" resultMap="resultComment">
+		SELECT *
+		      , (SELECT mb_id FROM dm_write WHERE wr_num = a.wr_num AND wr_reply = 0 AND wr_is_comment = 0) AS ori_mb_id
+		  FROM dm_write AS a
+		 WHERE a.wr_id != #{wr_id}
+		   AND a.wr_num = #{wr_num}
+		   AND a.wr_is_comment = 1
+		   AND a.wr_comment = 1
+		   AND a.dm_delete_yn = 'N'
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "content"'>
+					AND a.wr_content LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "name"'>
+					AND a.wr_name LIKE CONCAT('%', #{search_value}, '%')					
+				</when>
+				<otherwise>
+					AND (a.wr_content LIKE CONCAT('%', #{search_value}, '%')
+						 OR
+						 a.wr_name LIKE CONCAT('%', #{search_value}, '%'))
+				</otherwise>
+			</choose>
+		</if>
+		ORDER BY a.wr_comment_reply *1
+	</select>
+	<select id="selectChildComment" resultType="egovframework.diam.biz.model.board.Dm_write_vo">
+		SELECT *
+			  , (SELECT mb_id FROM dm_write WHERE wr_num = a.wr_num AND wr_reply = 0 AND wr_is_comment = 0) AS ori_mb_id
+		  FROM dm_write AS a
+		 WHERE a.wr_parent = #{wr_id}
+		   AND a.wr_is_comment = 1
+		   AND a.wr_comment = 2
+		   AND a.dm_delete_yn = 'N'
+		ORDER BY a.wr_comment_reply *1
+	</select>
+	<select id="selectCommentChildrenAll" resultMap="resultWriteVO">
+		WITH RECURSIVE CTE AS (
+				SELECT  *
+				  FROM  dm_write 
+				 WHERE  wr_id = #{wr_id}
+				   AND  dm_delete_yn = 'N'
+			 UNION ALL
+				SELECT  a.*
+				  FROM  dm_write AS a
+			INNER JOIN  CTE AS b 
+					ON  a.wr_parent = b.wr_id
+			 	 WHERE  a.dm_delete_yn = 'N'
+			 	   AND  a.wr_is_comment = 1
+		)
+		SELECT  wr_id
+		  FROM  CTE
+	</select>
+	
+	<insert id="insertComment">
+		INSERT INTO dm_write 
+			( 
+			  wr_num
+			, wr_board
+			, wr_parent
+			, wr_is_comment
+			, wr_comment
+			, wr_comment_reply
+			, wr_option
+			, wr_subject
+			, wr_content
+			, mb_id
+			, reply_mb_id
+			, wr_name
+			, wr_datetime
+			, wr_ip
+			<if test='wr_password != "" and wr_password != null'>
+				, wr_password
+			</if>
+			)
+		VALUES
+			(
+			  #{wr_num}
+			, #{wr_board}
+			, #{wr_parent}
+			, #{wr_is_comment}
+			, #{wr_comment}
+			, #{wr_comment_reply}
+			, #{wr_option}
+			, #{wr_subject}
+			, #{wr_content}
+			, #{mb_id}
+			, #{reply_mb_id}
+			, #{wr_name}
+			, now()
+			, #{wr_ip}
+			<if test='wr_password != "" and wr_password != null'>
+				, #{wr_password}
+			</if>
+			)
+	</insert>
+	<update id="updateComment">
+		UPDATE  dm_write
+		   SET  wr_option = #{wr_option}
+		      , wr_content = #{wr_content}
+		      , dm_modify_dt = now()
+		      , dm_modify_id = #{dm_modify_id}
+		 WHERE  wr_id = #{wr_id}
+	</update>
+	<select id="selectReplyList" resultMap="resultWriteVO">
+		WITH RECURSIVE CTE AS (
+				SELECT  *
+				  FROM  dm_write
+				 WHERE  wr_id = #{wr_id}
+			 UNION ALL
+				SELECT  a.*
+				  FROM  dm_write AS a
+			INNER JOIN  CTE AS b 
+					ON  a.wr_parent = b.wr_id
+			 	   AND  a.wr_reply > 0
+		)
+		SELECT  *
+		  FROM  CTE
+	</select>
+	<select id="selectMainWriteList" resultMap="resultWriteVO">
+		SELECT * 
+		 FROM dm_write
+		WHERE wr_board = #{wr_board}
+		  AND dm_delete_yn = 'N'
+		  AND wr_reply = 0
+		  AND wr_is_comment = 0
+		  AND wr_id = wr_parent
+		  AND (wr_option IS NULL OR wr_option = '')
+		ORDER BY wr_datetime DESC
+		LIMIT #{rows}
+	</select>
+</mapper>

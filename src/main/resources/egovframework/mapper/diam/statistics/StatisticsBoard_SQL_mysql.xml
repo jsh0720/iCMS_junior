@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.StatisticsBoardMapper">
+	<resultMap id="resultStatisticsBoardVO" type="egovframework.diam.biz.model.statistics.Dm_statistics_board_vo">
+	</resultMap>
+	
+	<select id="selectStatisticsBoardCount" resultMap="resultStatisticsBoardVO">
+	 select c.dm_domain_nm as domain_name
+			 ,  a.dm_subject as board_name
+			 ,  COUNT(CASE WHEN b.wr_is_comment = 0 THEN 1 ELSE NULL END) AS total_count
+			 ,  COUNT(CASE WHEN b.wr_id = b.wr_parent THEN 1 ELSE NULL END) AS write_count
+			 ,  COUNT(CASE WHEN b.wr_reply != 0 THEN 1 ELSE NULL END) AS reply_count
+			 ,  COUNT(CASE WHEN b.wr_is_comment != 0 THEN 1 ELSE NULL END) AS comment_count
+	 from (select dm_id, dm_domain, dm_subject from dm_board where dm_delete_yn != 'Y') a
+	 left join dm_write b on a.dm_id = b.wr_board and b.dm_delete_yn != 'Y'
+	 inner join dm_domain_list c on a.dm_domain = c.dm_id and c.dm_delete_yn = 'N'
+	 where 1=1
+	 GROUP BY  a.dm_subject
+	 ORDER BY  c.dm_id ASC, a.dm_id ASC
+	</select>
+</mapper>

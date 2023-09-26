@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.config.AccessIpMapper">
+	<resultMap id="resultAccessIpVO" type="egovframework.diam.biz.model.config.Dm_access_ip_vo">
+	</resultMap>
+	<sql id="selectAccessIpListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_ip"'>
+					AND	A.dm_ip LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "dm_name"'>
+					AND	A.dm_name LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<otherwise>
+					AND	(A.dm_ip LIKE CONCAT('%', #{search_value} ,'%') OR A.dm_name LIKE CONCAT('%', #{search_value} ,'%'))
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_status != null and search_status != ""'>
+			AND	A.dm_status = #{search_status}
+		</if>
+	</sql>
+	
+	<select id="selectAccessIpListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_access_ip A
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectAccessIpListWhere"/>
+	</select>
+	
+	<select id="selectAccessIpList" resultMap="resultAccessIpVO">
+		SELECT	A.*
+			 ,	(SELECT	dm_code_name FROM dm_common_code WHERE A.dm_status = dm_code_value AND dm_code_group = '1001') as status_text
+		  FROM	dm_access_ip A
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectAccessIpListWhere"/>
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectAccessIp" resultMap="resultAccessIpVO">
+		SELECT	A.*
+			  , (SELECT	dm_code_name FROM dm_common_code WHERE A.dm_status = dm_code_value AND dm_code_group = '1001') as status_text
+		  FROM	dm_access_ip AS A
+		 WHERE	dm_id = #{dm_id}
+	</select>
+	
+	<update id="deleteAccessIp">
+		UPDATE  dm_access_ip
+		   SET  dm_delete_dt = now()
+		   	  , dm_delete_id = #{dm_delete_id}
+		   	  , dm_delete_yn = 'Y'
+		 WHERE  dm_id = #{dm_id}
+	</update>
+	
+	<insert id="insertAccessIp">
+		INSERT
+		  INTO	dm_access_ip
+		  	 (	dm_ip,
+		  	 	dm_name,
+		  	 	dm_status,
+		  	 	dm_create_dt,
+		  	 	dm_create_id
+		  	 )
+		VALUES
+			 (	#{dm_ip},
+			 	#{dm_name},
+			 	#{dm_status},
+			 	now(),
+			 	#{dm_create_id}
+			 )	
+	</insert>
+	
+	<update id="updateAccessIp">
+		UPDATE	dm_access_ip
+		   SET	dm_name = #{dm_name}
+		     ,	dm_status = #{dm_status}
+		     ,	dm_modify_dt = now()
+		     ,	dm_modify_id = #{dm_modify_id}
+		 WHERE	dm_id = #{dm_id}	
+	</update>
+		
+	<select id="selectAccessIpAll" resultMap="resultAccessIpVO">
+		SELECT	*
+		  FROM	dm_access_ip
+		 WHERE 	dm_status = '1'
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectAccessIpDuplicate" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_access_ip
+		 WHERE	dm_ip = #{dm_ip}
+		   AND  dm_delete_yn = 'N'
+	</select>
+</mapper>

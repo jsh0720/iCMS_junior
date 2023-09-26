@@ -1,0 +1,94 @@
+@charset "utf-8";
+
+.panel{padding-top:0}
+.layout-panel-center .datagrid-body{margin-top:-30px;}
+.panel.layout-panel-south{overflow:hidden !important;margin:5px 20px 0}
+.panel.layout-panel-west{border-right-width:1px;min-width:220px;max-width:260px;}
+
+.panel-fit .layout{ height:calc(100% - 35px) !important}
+.layout-panel-north .panel-body-noheader{height:auto !important; }
+.datagrid-header,.datagrid .datagrid-pager,.panel-body-noheader{border:0 !important;}
+
+.datagrid-td-rownumber,.datagrid-body table tbody td{border:solid rgba(0,0,0,0.1);border-width:0 1px 1px 0;text-align:center;}
+.datagrid-header table tbody td{background-color:#999;border-color:rgba(0,0,0,0.1);color:#fff;font-size:90%;font-weight:bold;text-align:center;padding:9px 0;}
+.datagrid-td-rownumber,.datagrid-btable td:first-child,.datagrid-htable td:first-child
+/*,.datagrid-body table tbody td:first-child,.datagrid-header table tbody td:first-child*/{border-left-width:1px !important;}
+.datagrid-view1{width:30px !important}
+
+
+.datagrid-row,.datagrid-row-hover{color:inherit !important;background-color:inherit !important}
+/*.datagrid-btable .dg_datagrid-cell-c2-dm_subject{text-align:left !important; padding-left:10px;}*/
+/*.datagrid-row-selected{background:none !important; color:inherit !important}*/
+
+
+.datagrid .datagrid-pager,.datagrid-td-rownumber{background:none;}
+.datagrid .pagination-info{font-size:0.9em;margin-left:0}
+.datagrid-pager{overflow:hidden; position:relative;}
+.pagination-btn-separator,.datagrid-pager .pagination-info{display:none;}
+.pagination table{}
+.datagrid-pager .l-btn{background:none;border-radius:0;border-color:rgba(0,0,0,0.2);height:30px;}
+.datagrid-pager #del_btn{position:absolute;right:70px;top:0; border-width:1px; border-style:solid}
+.pagination-page-list {position:absolute;right:0px;height:30px;top:0}
+.datagrid-pager-top .pagination-page-list{right:-6px;}
+
+.panel-title{ color:#333}
+.panel-body.title,.panel-body .title{padding:23px 40px 10px;}
+
+.panel-body .page{padding:20px 20px 50px;}
+
+.datagrid-toolbar{background-color:transparent;padding-bottom:5px !important}
+.datagrid-toolbar span{ vertical-align:middle}
+
+.datagrid-toolbar .easyui-linkbutton{ font-weight:bold}
+.datagrid-toolbar td:last-child{text-align:right;}
+.datagrid-toolbar td:first-child{text-align:left;}
+
+
+
+.textbox,.easyui-linkbutton{border-radius:0;vertical-align:middle; background:#fff;border-color:rgba(0,0,0,0.2);}
+.easyui-linkbutton *,.l-btn *.l-btn-text{white-space:nowrap;}
+.easyui-linkbutton:hover{background-color:#fff;border-color:rgba(0,0,0,0.3);color:inherit}
+
+.textbox *{background:none !important;}
+.textbox input{text-indent:0}
+.textbox *:after{font-family:"Font Awesome 5 Free";font-weight:900;}
+/*.textbox.combo{width:calc(100% - 30px) !important;}*/
+
+.textbox.combo{min-width:100px !important;width:auto !important;color:inherit;min-height: 28px;}
+.textbox.combo input{/*width:auto !important*/ width:100% !important;}
+.textbox.datebox,.page dl dd .textbox.datebox{width:auto !important}
+.textbox .combo-arrow{margin-top:5px;margin-right:-10px}
+.textbox .combo-arrow:after{content:'\f078';}
+.datebox .combo-arrow{margin-right:0}
+.datebox .combo-arrow:after{content:'\f073';}
+
+
+/* easyui icon 커스텀 추가 2023-03-07 최은빈 */
+.datagrid-btable .tree-node { height: 100% !important; }
+.tree-expanded, .tree-collapsed, .tree-folder, .tree-file, .tree-checkbox, .tree-indent { margin: 0 4px; }
+
+.tree-line { background: url("../images/icon_tree.png") 1px -118px no-repeat; }
+.tree-lines .tree-expanded,
+.tree-lines .tree-root-first .tree-expanded,
+.tree-lines .tree-node-last .tree-expanded { background: url("../images/icon_tree.png") -43px -34px no-repeat; }
+.tree-lines .tree-collapsed, 
+.tree-lines .tree-root-first .tree-collapsed,
+.tree-lines .tree-node-last .tree-collapsed { background: url("../images/icon_tree.png") 1px -34px no-repeat; }
+.tree-join { background: url("../images/icon_tree.png") 1px -72px no-repeat; }
+.tree-joinbottom { background: url("../images/icon_tree.png") -43px -133px no-repeat; }
+
+
+/* 테이블 간격 추가 2023-03-20 최은빈 */
+.datagrid-header .datagrid-cell { padding: 0 4px; line-height: 1; }
+.datagrid-cell, .datagrid-cell-group, .datagrid-header-rownumber, .datagrid-cell-rownumber { padding: 4px; }
+.datagrid-cell-rownumber { display: flex; justify-content: center; align-items: center; }
+
+
+/* 게시 기간 select 정렬 2023-03-20 최은빈 */
+.during { display: flex; justify-content: flex-start; align-items: center; }
+.during > * { flex: 0 1 150px; margin: 2px; }
+.during > .label { flex: 0 0 auto; margin: 2px 15px 2px 2px; }
+@media (max-width: 992px) {
+  
+}
+

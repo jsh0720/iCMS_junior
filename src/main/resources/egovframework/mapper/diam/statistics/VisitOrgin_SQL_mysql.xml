@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.VisitOrginMapper">
+
+	<resultMap id="resultVisitorOriginVO" type="egovframework.diam.biz.model.statistics.Dm_visit_orgin_vo">
+	</resultMap>
+	
+	<insert id="insertVisitOrgin">
+		INSERT INTO dm_visit_orgin
+		            (dm_datetime,
+		             dm_orgin,
+		             dm_count,
+		             dm_domain
+		            )
+		VALUES      ( #{dm_datetime},
+		              #{dm_orgin},
+		              #{dm_count},
+		              #{dm_domain}
+		            )
+	</insert>
+
+	<select id="checkVisitOrgin" resultType="int">
+		SELECT COUNT(*)
+		FROM   dm_visit_orgin
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_orgin = #{dm_orgin}
+		       AND dm_domain = #{dm_domain}
+	</select>
+
+	<update id="updateVisitOrgin">
+		UPDATE dm_visit_orgin
+		SET    dm_count = dm_count + 1
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_orgin = #{dm_orgin}
+		       AND dm_domain = #{dm_domain}
+	</update>
+	
+	<sql id="visitOrginWhere">
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(STR_TO_DATE(#{search_start_date}, '%Y-%m-%d'), '%Y-%m-%d')
+		</if>
+		<if test="search_end_date != null and search_end_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(STR_TO_DATE(#{search_end_date}, '%Y-%m-%d'), '%Y-%m-%d')
+		</if>
+	</sql>
+
+	<select id="selectVisitOrginTotalCount" resultType="int">
+		SELECT IFNULL(SUM(dm_count), 0)
+		FROM   dm_visit_orgin
+		WHERE  dm_domain = #{dm_domain}
+		       <include refid="visitOrginWhere"/>
+	</select>
+
+	<select id="selectVisitOrginArrEngineCount" resultType="int">
+		SELECT IFNULL(SUM(dm_count), 0)
+		FROM   dm_visit_orgin
+		WHERE  <foreach collection="dm_orgin_engine" item="item" separator="OR" open="(" close=")">
+			       dm_orgin LIKE CONCAT('%', #{item}, '%')
+				</foreach>
+				AND dm_domain = #{dm_domain}
+		       <include refid="visitOrginWhere"/>
+	</select>
+
+	<select id="selectVisitOrginEngineCount" resultType="int">
+		SELECT IFNULL(SUM(dm_count), 0)
+		FROM   dm_visit_orgin
+		WHERE  dm_orgin LIKE CONCAT('%', #{dm_orgin}, '%')
+		       AND dm_domain = #{dm_domain}
+		       <include refid="visitOrginWhere"/>
+	</select>
+
+	<select id="selectVisitOrginArrNotEngineCount" resultType="int">
+		SELECT IFNULL(SUM(dm_count), 0)
+		FROM   dm_visit_orgin
+		WHERE  <foreach collection="dm_orgin_engine" item="item" separator="AND" open="(" close=")">
+			       dm_orgin NOT LIKE CONCAT('%', #{item}, '%')
+				</foreach>
+				AND dm_domain = #{dm_domain}
+		       <include refid="visitOrginWhere"/>
+	</select>
+
+	<select id="selectVisitOrginDateCountList" resultMap="resultVisitorOriginVO">
+		SELECT a.date AS dm_datetime,
+		       (SELECT IFNULL(SUM(b.dm_count), 0)
+		        FROM   dm_visit_orgin b
+		        WHERE  DATE_FORMAT(b.dm_datetime, '%Y-%m-%d') = a.date
+		               AND dm_orgin LIKE CONCAT('%', #{dm_orgin}, '%')
+		               AND dm_domain = #{dm_domain}) AS dm_count
+		FROM   (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select>
+
+	<select id="selectVisitOrginEtcDatecountList" resultMap="resultVisitorOriginVO">
+		SELECT a.date AS dm_datetime,
+		       (SELECT IFNULL(SUM(b.dm_count), 0)
+		        FROM   dm_visit_orgin b
+		        WHERE  DATE_FORMAT(b.dm_datetime, '%Y-%m-%d') = a.date
+		        	<foreach collection="dm_orgin_engine" item="item" separator="AND" open="AND (" close=")">
+		               dm_orgin NOT LIKE CONCAT('%', #{item}, '%')
+		        	</foreach>
+		               AND dm_domain = #{dm_domain}) AS dm_count
+		FROM   (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select>
+</mapper>

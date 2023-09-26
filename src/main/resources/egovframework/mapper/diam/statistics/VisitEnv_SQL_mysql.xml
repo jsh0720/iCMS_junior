@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.VisitEnvMapper">
+
+	<resultMap id="resultVisitorVO" type="egovframework.diam.biz.model.statistics.Dm_visit_env_vo">
+	</resultMap>
+	
+	<insert id="insertVisitEnv" parameterType="egovframework.diam.biz.model.statistics.Dm_visit_env_vo">
+		INSERT INTO dm_visit_env
+		            (dm_datetime,
+		             dm_os,
+		             dm_brower,
+		             dm_count,
+		             dm_type,
+		             dm_domain)
+		VALUES      (#{dm_datetime},
+		             #{dm_os},
+		             #{dm_brower},
+		             #{dm_count},
+		             #{dm_type},
+		             #{dm_domain})
+	</insert>
+
+	<select id="checkVisitEnv" parameterType="egovframework.diam.biz.model.statistics.Dm_visit_env_vo" resultType="int">
+		SELECT COUNT(*)
+		FROM   dm_visit_env
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_os = #{dm_os}
+		       AND dm_brower = #{dm_brower}
+		       AND dm_type = #{dm_type}
+		       AND dm_domain = #{dm_domain}
+	</select>
+
+	<update id="updateVisitEnv" parameterType="egovframework.diam.biz.model.statistics.Dm_visit_env_vo">
+		UPDATE dm_visit_env
+		SET dm_count = dm_count + 1
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_os = #{dm_os}
+		       AND dm_brower = #{dm_brower}
+		       AND dm_type = #{dm_type}
+		       AND dm_domain = #{dm_domain}
+	</update>
+	
+	<sql id="visitEvnWhere">
+		<if test="search_start_date != null and search_start_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[>=]]> DATE_FORMAT(STR_TO_DATE(#{search_start_date}, '%Y-%m-%d'), '%Y-%m-%d')
+		</if>
+		<if test="search_end_date != null and search_end_date != ''">
+			AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <![CDATA[<=]]> DATE_FORMAT(STR_TO_DATE(#{search_end_date}, '%Y-%m-%d'), '%Y-%m-%d')
+		</if>
+	</sql>
+
+	<select id="selectVisitEnvTypeCount" resultType="int">
+		SELECT COUNT(*) AS 'count'
+		FROM   dm_visit_env
+		WHERE  dm_type = #{dm_type}
+		AND    dm_domain = #{dm_domain}
+		<include refid="visitEvnWhere"/>
+	</select>
+
+	<select id="selectVisitEnvMaxType" resultMap="resultVisitorVO">
+		SELECT dm_count,
+		       dm_os
+		FROM   (SELECT IFNULL(SUM(dm_count),0) AS dm_count,
+		               dm_os
+		        FROM   dm_visit_env
+		        WHERE  dm_type = #{dm_type}
+		        AND    dm_domain = #{dm_domain}
+		        <include refid="visitEvnWhere"/>
+		        GROUP  BY dm_os
+		        ) z
+		ORDER  BY dm_count DESC
+		LIMIT  1
+	</select>
+
+	<select id="selectVisitEnvOsList" resultMap="resultVisitorVO">
+		SELECT DISTINCT dm_os FROM dm_visit_env WHERE dm_domain = #{dm_domain}
+	</select>
+
+	<select id="selectVisitEnvDateCountList" resultMap="resultVisitorVO">
+		SELECT a.date AS dm_datetime,
+		       (
+			SELECT IFNULL(SUM(dm_count),0) AS dm_count
+			FROM   dm_visit_env
+			WHERE  DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+			AND    dm_os LIKE CONCAT('%',#{dm_os},'%')
+			AND    dm_domain = #{dm_domain}
+			) AS dm_count
+		FROM   (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select>
+
+	<select id="selectVisitEnvCount" resultType="int">
+		SELECT IFNULL(Sum(dm_count), 0) AS dm_count
+		FROM   dm_visit_env
+		WHERE  dm_os LIKE CONCAT('%', #{dm_os}, '%')
+		       AND dm_domain = #{dm_domain}
+		       <include refid="visitEvnWhere"/>
+	</select>
+
+	<select id="selectVisitEnvBrowserList" resultMap="resultVisitorVO">
+		SELECT DISTINCT dm_brower FROM dm_visit_env WHERE dm_domain = #{dm_domain}
+	</select>
+
+	<select id="selectVisitEnvBrowerCount" resultType="int">
+		SELECT IFNULL(Sum(dm_count), 0) AS dm_count
+		FROM   dm_visit_env
+		WHERE  dm_brower LIKE CONCAT('%', #{dm_brower}, '%')
+		       AND dm_domain = #{dm_domain}
+		       <include refid="visitEvnWhere"/>
+	</select>
+
+	<select id="selectVisitEnvBrowerDateCountList" resultMap="resultVisitorVO">
+		SELECT a.date AS dm_datetime,
+		       (
+			SELECT IFNULL(SUM(dm_count),0) AS dm_count
+			FROM   dm_visit_env
+			WHERE  DATE_FORMAT(dm_datetime, '%Y-%m-%d') = a.date
+			AND    dm_brower LIKE CONCAT('%',#{dm_brower},'%')
+			AND    dm_domain = #{dm_domain}
+			) AS dm_count
+		FROM   (
+			SELECT CURDATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY AS DATE
+			FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS c
+			CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS d
+		) a
+		WHERE  a.date BETWEEN #{search_start_date} AND #{search_end_date}
+		ORDER  BY a.date
+	</select>
+
+	
+</mapper>

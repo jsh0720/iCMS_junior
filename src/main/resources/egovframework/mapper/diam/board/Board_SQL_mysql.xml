@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.board.BoardMapper">
+	<resultMap id="resultBoardVO" type="egovframework.diam.biz.model.board.Dm_board_vo">
+	</resultMap>
+	
+	<sql id="selectBoardListWhere">
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_subject"'>
+					AND	A.dm_subject LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_skin"'>
+					AND	A.dm_skin LIKE CONCAT('%', #{search_value} ,'%')				
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_subject LIKE CONCAT('%', #{search_value} ,'%') OR 
+						A.dm_skin LIKE CONCAT('%', #{search_value} ,'%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_domain != null and search_domain != ""'>
+ 			AND	A.dm_domain = #{search_domain}
+ 		</if>
+	</sql>
+	
+	<select id="selectBoardListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_board A
+ 	 	 WHERE	1=1
+ 	 	   AND  A.dm_delete_yn = 'N'
+ 	 	 <include refid="selectBoardListWhere"/>
+ 	</select>
+	
+ 	<select id="selectBoardList" resultMap="resultBoardVO"> 
+ 		SELECT	A.*
+ 			 ,	IFNULL((SELECT	dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인정보없음') as dm_domain_text
+ 		  FROM	dm_board A
+ 		INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+ 		 WHERE	1=1
+ 		   AND  A.dm_delete_yn = 'N'
+ 		<include refid="selectBoardListWhere"/>
+ 	  ORDER BY	dm_id desc
+ 	  <if test="search_type != 'dash_board'">
+ 		 LIMIT	#{page}, #{rows} 	  
+ 	  </if>
+ 	</select>
+ 	
+ 	<select id="selectBoardListForWrite" resultMap="resultBoardVO">
+ 		SELECT	*
+ 		  FROM	dm_board
+ 		 WHERE	1=1
+ 		   AND  dm_delete_yn = 'N'
+ 		 <if test='dm_id != "" and dm_id != null'>
+		   AND	dm_id = #{dm_id}
+		 </if>
+ 	</select>
+ 	
+ 	<select id="selectBoard" resultMap="resultBoardVO">
+ 		SELECT	A.*
+ 		 	 ,	IFNULL((SELECT	dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인정보없음') as dm_domain_text
+ 		  FROM	dm_board A
+ 		 WHERE	A.dm_id = #{dm_id}
+ 	</select>
+ 	
+ 	<insert id="insertBoard">
+ 	INSERT INTO dm_board (
+		dm_domain,
+		dm_table,
+		dm_subject,
+		dm_auth_type,
+		dm_list_level,
+		dm_list_group,
+		dm_read_level,
+		dm_read_group,
+		dm_write_level,
+		dm_write_group,
+		dm_reply_level,
+		dm_reply_group,
+		dm_is_reply,
+		dm_comment_level,
+		dm_comment_group,
+		dm_is_comment,
+		dm_upload_level,
+		dm_upload_group,
+		dm_link_level,
+		dm_link_group,
+		dm_use_category,
+		dm_use_list_category,
+		dm_category_list,
+		dm_use_secret,
+		dm_use_dhtml_editor,
+		dm_page_rows,
+		dm_skin,
+		dm_gallery_width,
+		dm_gallery_height,
+		dm_upload_count,
+		dm_basic_content,
+		dm_header_content,
+		dm_footer_content,
+		dm_use_comment_secret,
+		dm_writer_type,
+		dm_writer_secret,
+		dm_hit_count,
+		dm_is_hit,
+		dm_hit_max,
+		dm_hit_icon,
+		dm_is_new,
+		dm_new_time,
+		dm_new_icon,
+		dm_use_file_icon,
+		dm_reply_delete_type,
+		dm_use_link,
+		dm_use_file,
+		dm_main_use,
+		dm_main_order,
+		dm_main_count,
+		dm_create_dt,
+		dm_create_id
+	) VALUE (
+		#{dm_domain},
+		#{dm_table},
+		#{dm_subject},
+		#{dm_auth_type},
+		#{dm_list_level},
+		#{dm_list_group},
+		#{dm_read_level},
+		#{dm_read_group},
+		#{dm_write_level},
+		#{dm_write_group},
+		#{dm_reply_level},
+		#{dm_reply_group},
+		#{dm_is_reply},
+		#{dm_comment_level},
+		#{dm_comment_group},
+		#{dm_is_comment},
+		#{dm_upload_level},
+		#{dm_upload_group},
+		#{dm_link_level},
+		#{dm_link_group},
+		#{dm_use_category},
+		#{dm_use_list_category},
+		#{dm_category_list},
+		#{dm_use_secret},
+		#{dm_use_dhtml_editor},
+		#{dm_page_rows},
+		#{dm_skin},
+		#{dm_gallery_width},
+		#{dm_gallery_height},
+		#{dm_upload_count},
+		#{dm_basic_content},
+		#{dm_header_content},
+		#{dm_footer_content},
+		#{dm_use_comment_secret},
+		#{dm_writer_type},
+		#{dm_writer_secret},
+		#{dm_hit_count},
+		#{dm_is_hit},
+		#{dm_hit_max},
+		#{dm_hit_icon},
+		#{dm_is_new},
+		#{dm_new_time},
+		#{dm_new_icon},
+		#{dm_use_file_icon},
+		#{dm_reply_delete_type},
+		#{dm_use_link},
+		#{dm_use_file},
+		#{dm_main_use},
+		#{dm_main_order},
+		#{dm_main_count},
+		now(),
+		#{dm_create_id}
+	)
+ 	</insert>
+ 	
+ 	<update id="updateBoard">
+ 		UPDATE dm_board SET
+		dm_subject = #{dm_subject},
+		dm_auth_type = #{dm_auth_type},
+		dm_list_level = #{dm_list_level},
+		dm_list_group = #{dm_list_group},
+		dm_read_level = #{dm_read_level},
+		dm_read_group = #{dm_read_group},
+		dm_write_level = #{dm_write_level},
+		dm_write_group = #{dm_write_group},
+		dm_reply_level = #{dm_reply_level},
+		dm_reply_group = #{dm_reply_group},
+		dm_is_reply = #{dm_is_reply},
+		dm_comment_level = #{dm_comment_level},
+		dm_comment_group = #{dm_comment_group},
+		dm_is_comment = #{dm_is_comment},
+		dm_upload_level = #{dm_upload_level},
+		dm_upload_group = #{dm_upload_group},
+		dm_link_level = #{dm_link_level},
+		dm_link_group = #{dm_link_group},
+		dm_use_category = #{dm_use_category},
+		dm_use_list_category = #{dm_use_list_category},
+		dm_category_list = #{dm_category_list},
+		dm_use_secret = #{dm_use_secret},
+		dm_use_dhtml_editor = #{dm_use_dhtml_editor},
+		dm_page_rows = #{dm_page_rows},
+		dm_skin = #{dm_skin},
+		dm_gallery_width = #{dm_gallery_width},
+		dm_gallery_height = #{dm_gallery_height},
+		dm_upload_count = #{dm_upload_count},
+		dm_basic_content = #{dm_basic_content},
+		dm_header_content = #{dm_header_content},
+		dm_footer_content = #{dm_footer_content},
+		dm_use_comment_secret = #{dm_use_comment_secret},
+		dm_writer_type = #{dm_writer_type},
+		dm_writer_secret = #{dm_writer_secret},
+		dm_hit_count = #{dm_hit_count},
+		dm_is_hit = #{dm_is_hit},
+		dm_hit_max = #{dm_hit_max},
+		dm_hit_icon = #{dm_hit_icon},
+		dm_is_new = #{dm_is_new},
+		dm_new_time = #{dm_new_time},
+		dm_new_icon = #{dm_new_icon},
+		dm_use_file_icon = #{dm_use_file_icon},
+		dm_reply_delete_type = #{dm_reply_delete_type},
+		dm_use_link = #{dm_use_link},
+		dm_use_file = #{dm_use_file},
+		dm_main_use = #{dm_main_use},
+		dm_main_order = #{dm_main_order},
+		dm_main_count = #{dm_main_count},
+		dm_modify_dt = now(),
+		dm_modify_id = #{dm_modify_id}
+		WHERE dm_id = #{dm_id}
+ 	</update>
+ 		
+	<update id="deleteBoard">
+		UPDATE	dm_board
+		   SET  dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		      , dm_delete_id = #{dm_delete_id}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectBoardbyDmTable" resultMap="resultBoardVO">
+		SELECT	*
+		  FROM	dm_board
+		 WHERE	dm_table = #{dm_table}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectMainBoardList" resultMap="resultBoardVO">
+		SELECT  dm_id
+			  , dm_table
+			  , dm_subject
+			  , dm_main_order
+			  , dm_main_count
+			  , dm_skin
+		      , (SELECT dm_uid FROM dm_pages WHERE dm_board_id = dm_board.dm_id AND dm_domain = #{dm_domain} AND dm_delete_yn = 'N' AND dm_status = 1) AS dm_uid
+		  FROM dm_board
+		 WHERE dm_domain = #{dm_domain}
+		   AND dm_delete_yn = 'N'
+		   AND dm_main_use = 1
+		ORDER BY dm_main_order ASC
+	</select>
+</mapper>

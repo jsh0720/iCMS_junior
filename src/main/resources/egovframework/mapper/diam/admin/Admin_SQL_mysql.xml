@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.admin.AdminMapper">
+	<resultMap id="resultAdminVO" type="egovframework.diam.biz.model.admin.Dm_admin_vo">
+	</resultMap>
+	
+	<sql id="selectAdminWhere">
+		AND	A.dm_level BETWEEN 6 AND #{dm_level}
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_id"'>
+					AND	A.dm_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_name"'>
+					AND	A.dm_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_hp"'>
+					AND	A.dm_hp LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_id LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_name LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_hp LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if>				
+		<if test='search_start_date != null and search_start_date != ""'>
+			AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &gt;= STR_TO_DATE(#{search_start_date}, '%Y-%m-%d')
+		</if>
+		<if test='search_end_date != null and search_end_date != ""'>
+			AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &lt;= STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+		</if>		
+		<if test='search_level != null and search_level != ""'>
+			AND	A.dm_level = #{search_level}
+		</if>
+		<if test='search_status != null and search_status != ""'>
+			AND	A.dm_status = #{search_status}
+		</if>
+	</sql>
+	
+	<select id="selectAdminListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_member A
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		 <include refid="selectAdminWhere"/>
+	</select>
+	
+	<select id="selectAdminList" resultMap="resultAdminVO">
+		SELECT	*
+			 ,  (SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '2012' AND dm_code_value = A.dm_status) AS dm_status_text
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '1002' AND dm_code_value = A.dm_level) AS dm_level_text
+			 ,  (SELECT dm_group_name FROM dm_group WHERE dm_group_id = A.group_id) AS dm_group_text
+		  FROM	dm_member A
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		 <include refid="selectAdminWhere"/>
+	  ORDER BY	A.dm_no ASC
+	     LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectAdmin" resultMap="resultAdminVO">
+		SELECT	dm_addr1
+			 ,  dm_addr2
+			 ,  dm_addr3
+			 ,  dm_addr_jibeon
+			 ,  dm_datetime
+			 ,  dm_email
+			 ,  dm_hp
+			 ,  dm_id
+			 ,  dm_ip
+			 ,  dm_level
+			 ,  dm_name
+			 ,  dm_no
+			 ,  dm_password
+			 ,  dm_tel
+			 ,  dm_zip
+			 ,  esntl_id
+			 ,  user_se
+			 ,  dm_status
+			 ,  group_id
+		  FROM	dm_member
+		 WHERE	dm_no = #{dm_no}
+	</select>
+		
+	<update id="deleteAdmin">
+		UPDATE  dm_member
+		   SET  dm_delete_yn = 'Y'
+		     ,  dm_delete_dt = now()
+		     ,  dm_delete_id = #{dm_delete_id}
+		     ,  dm_status = 'L'
+		 WHERE	dm_no = #{dm_no}
+	</update>
+	
+	<insert id="insertAdmin">
+		INSERT
+		  INTO	dm_member
+		  	 (	
+		  	 	dm_id
+		  	 ,  dm_password
+		     ,  dm_name
+		  	 ,  dm_email
+		  	 ,  dm_level
+		  	 ,  dm_tel
+		  	 ,  dm_hp
+		  	 ,  dm_zip
+		  	 ,  dm_addr1
+		  	 ,  dm_addr2
+		  	 ,  dm_addr3
+		  	 ,  dm_addr_jibeon
+		  	 ,  dm_datetime
+    		 ,  dm_ip
+    		 ,  group_id
+    		 ,  user_se
+    		 ,  dm_status
+    		 ,  esntl_id
+    		 ,  dm_create_id
+    		 ,  dm_create_dt
+		  	 )
+		VALUES
+			 (	
+			 	#{dm_id}
+			 ,	#{dm_password}
+			 ,  #{dm_name}
+			 , 	#{dm_email}
+			 ,	#{dm_level}
+			 ,	#{dm_tel}
+			 ,	#{dm_hp}
+			 ,	#{dm_zip}
+		  	 ,	#{dm_addr1}
+		  	 ,	#{dm_addr2}
+		  	 ,	#{dm_addr3}
+		  	 ,	#{dm_addr_jibeon}
+			 ,	now()
+    		 ,	#{dm_ip}
+    		 ,	#{group_id}
+    		 ,	#{user_se}
+    		 ,	#{dm_status}
+    		 ,	#{esntl_id}
+    		 ,  #{dm_create_id}
+    		 ,  now()    				 
+			 )
+	</insert>
+	
+	<update id="updateAdmin">
+		UPDATE	dm_member
+		   SET	dm_name = #{dm_name}
+			 ,	dm_email = #{dm_email}
+			 ,	dm_level = #{dm_level}
+    		 ,	dm_tel = #{dm_tel}
+    		 ,	dm_hp = #{dm_hp}
+    		 ,	dm_zip = #{dm_zip}
+		  	 ,	dm_addr1 = #{dm_addr1}
+		  	 ,	dm_addr2 = #{dm_addr2}
+		  	 ,	dm_addr3 = #{dm_addr3}
+		  	 ,	dm_addr_jibeon = #{dm_addr_jibeon}
+			<if test='dm_password != "" and dm_password != null'>
+				,  dm_password = #{dm_password}
+			</if>
+			 ,  group_id = #{group_id}
+			 ,  dm_modify_id = #{dm_modify_id}
+			 ,  dm_modify_dt = now()
+		 WHERE	dm_no = #{dm_no}
+	</update>
+	
+	<select id="selectAdminDupChk" resultMap="resultAdminVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE	dm_id = #{dm_id}
+	</select>
+</mapper>

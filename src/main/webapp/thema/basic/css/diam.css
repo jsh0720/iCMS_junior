@@ -1,0 +1,159 @@
+/*================================================================
+    폼 스타일
+================================================================*/
+select {appearance:none;-webkit-appearance:none;-moz-appearance:none;background:url('../images/select_arrow.png') no-repeat right 9px center; cursor: pointer; }
+select::-ms-expand {display:none;}
+
+
+.form-style { background-color: #f9f9f9; padding: 3.125rem 2.188rem; }
+.form-control { height: calc(1.5em + .75rem + 7.5px); border: 1px solid #ddd; border-radius: 0.278rem; }
+.form-control::placeholder,
+textarea::placeholder { color: #BABABA; font-size: 1rem; }
+.form-control:focus { border-color: #9FABD8; }
+.form-group > label { margin-bottom: 0.5rem; font-weight: 600; user-select: none; }
+
+textarea.form-control::-webkit-scrollbar { width: 5px; }
+textarea.form-control::-webkit-scrollbar-track { background: #f9f9f9; border-radius: 0.188rem; }
+textarea.form-control::-webkit-scrollbar-thumb { background: #ccc; border-radius: 0.188rem; }
+textarea.form-control::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+/* @media (hover: hover) {
+    input[type="number"]:hover, input[type="text"]:hover, input[type="password"]:hover, input[type="url"]:hover, 
+    input[type="email"]:hover, input[type="tel"]:hover, input[type="date"]:hover, textarea:hover { border-color: #1D2D67; }
+} */
+
+/* 그림자 리셋 */
+.custom-control-input:not(:disabled):active~.custom-control-label::before { background-color: #fff; border-color: #ddd; }
+.custom-control-input:focus~.custom-control-label::before { box-shadow: none; border-color: #ddd; }
+.custom-control-input:focus:not(:checked)~.custom-control-label::before { border-color: #ddd; box-shadow: none; }
+
+/* 공통 */
+.custom-control { display: inline-block; }
+
+/* 라디오 버튼 */
+.custom-radio .custom-control-label { /* height: calc(1.5em + .75rem + 7.5px); */ padding-left: 0.15rem; }
+.custom-radio .custom-control-input, .custom-radio .custom-control-label::before { top: -0.15rem; width: 1.667rem; height: 1.667rem; }
+.custom-radio .custom-control-input { left: -0.5rem; }
+.custom-radio .custom-control-label::before, .custom-radio .custom-control-label::after { left: -100%; }
+.custom-radio .custom-control-label::before { border: 1px solid #ddd; }
+.custom-radio .custom-control-label::after { top: 0.26rem; width: 0.889rem; height: 0.889rem; left: calc(-100% + 0.4em); }
+
+.custom-radio { margin-left: 0.5rem; }
+.custom-radio:not(:last-child) { margin-right: 1.5rem; }
+.custom-input[type=radio]~.custom-control-label::before { border-radius: 50%; }
+.custom-input[type=radio]:checked~.custom-control-label::before { border-color: #ddd; background-color: #fff; border-radius: 50%; box-shadow: none; }
+.custom-input[type=radio]:checked~.custom-control-label::after { top: 0.375rem; left: 0.375rem;
+    width: 0.875rem; height: 0.875rem; background: #111; border-radius: 50%; }
+
+.custom-radio .custom-control-input:checked~.custom-control-label::before { background-color: #fff; border-color: #ddd; }
+.custom-radio .custom-control-input:checked~.custom-control-label::after { background: #214397; border-radius: 50%; }
+
+/* 체크 박스 */
+.custom-checkbox { padding-left: 2rem; }
+.custom-checkbox .custom-control-input,
+.custom-checkbox .custom-control-label::before , 
+custom-checkbox .custom-control-label::after,
+.custom-checkbox .custom-control-input:checked~.custom-control-label::after { top: -0.15rem; left: -2rem; width: 1.667rem; height: 1.667rem; border-radius: 0; }
+
+.custom-checkbox .custom-control-label::after { left: -1.65rem; }
+.custom-checkbox .custom-control-label::before { border: 1px solid #ddd; }
+.custom-control-input:checked~.custom-control-label::before { background-color: #214397; border-color: #214397; }
+.custom-checkbox .custom-control-input:checked~.custom-control-label::after { background: url("../images/icon_checkbox.png") center no-repeat; }
+
+
+
+/*================================================================
+  스타일가이드
+================================================================*/
+/* a-더보기 버튼 */
+.a-more-01 { display: inline-flex; justify-content: center; align-items: center; width: 200px; height: 80px; padding: 1rem; border-radius: 2.5rem; background-color: #004887; color: #fff; font-size: 1.125rem; font-weight: 400; letter-spacing: -0.045rem; transition: all .25s; }
+@media ( max-width: 992px ) {
+  .a-more-01 { width: 150px; height: 50px; }
+}
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-01:hover { background-color: #26619D; color: #fff; }
+}
+
+.a-more-02 { display: inline-flex; align-items: center; }
+.a-more-02 > p { color: #26619D; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: uppercase; }
+.a-more-02 > span { position: relative; width: 15px; height: 15px; margin-left: 6px; transition: all .25s; }
+.a-more-02 > span::before { content: ""; position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 1px; background: #26619D; border-radius: 50%; }
+.a-more-02 > span::after { content: ""; position: absolute; top: calc(50% - 2px); transform: translateY(-50%) rotate(45deg); right: 0; width: 6px; height: 1px; background: #26619D; border-radius: 50%; }
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-02:hover > span { transform: translateX(6px); }
+}
+
+.a-more-03 { position: relative; display: inline-flex; justify-content: space-between; align-items: center; width: 250px; height: 70px; padding: 1rem 1.875rem; border-radius: 50px; color: #fff; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.038rem;
+  background-size: 300px; background-position: 100%;
+  background-color: #168DF6; background-image: #168DF6;
+  background-image: -moz-linear-gradient(90deg, rgba(22,185,246,1) 0%, rgba(22,141,246,1) 100%); 
+  background-image: -webkit-linear-gradient(90deg, rgba(22,185,246,1) 0%, rgba(22,141,246,1) 100%); 
+  background-image: linear-gradient(90deg, rgba(22,185,246,1) 0%, rgba(22,141,246,1) 100%); 
+  background-repeat: no-repeat; transition: background .25s ease-in-out;
+}
+.a-more-03 > p { width: 100%; }
+.a-more-03 > span { position: relative; width: 14px; height: 14px; transition: all .25s; }
+.a-more-03 > span::before { content: ""; position: absolute; top: calc(50% - 3px); right: 0; transform: rotate(40deg) translateY(-50%); width: 10px; height: 2px; background: #fff; border-radius: 50%; }
+.a-more-03 > span::after { content: ""; position: absolute; top: calc(50% + 3px); right: -1px; transform: rotate(320deg) translateY(-50%); width: 10px; height: 2px; background: #fff; border-radius: 50%; }
+@media ( max-width: 992px ) {
+  .a-more-03 { width: 200px; height: 50px; }
+}
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-03:hover { background-position: 500%; color: #fff; }
+}
+
+.a-more-04 { position: relative; display: inline-flex; align-items: center; font-family: 'Poppins', 'Pretendard', sans-serif; font-size: 1rem; font-weight: 500; letter-spacing: 0; transition: all .25s; }
+.a-more-04 > span { position: relative; width: 14px; height: 14px; margin-left: 0.944rem; transition: all .25s; }
+.a-more-04 > span::before, .a-more-04 > span::after { content: ""; position: absolute; top: 50%; background: #111; }
+.a-more-04 > span::before { left: 0; transform: translateY(-50%); width: 100%; height: 3px; }
+.a-more-04 > span::after { left: 50%; transform: translate(-50%, -50%); width: 3px; height: 100%; }
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-04:hover > span { transform: rotate(180deg); }
+}
+
+.a-more-05 { position: relative; display: inline-flex; align-items: center; width: 48px; height: 48px; padding: 13px; border-radius: 50%; border: 1px solid #ddd; background-color: #fff; transition: all .25s; top: -0.625rem; }
+.a-more-05 > span { position: relative; display: block; width: 100%; height: 100%; transition: all .25s; }
+.a-more-05 > span::before, .a-more-05 > span::after { content: ""; position: absolute; top: 50%; background: #707070; transition: all .25s; }
+.a-more-05 > span::before { left: 0; transform: translateY(-50%); width: 100%; height: 2px; }
+.a-more-05 > span::after { left: 50%; transform: translate(-50%, -50%); width: 2px; height: 100%; }
+@media (max-width: 768px) {
+  .a-more-05 { width: 40px; height: 40px; padding: 10px; }
+}
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-05:hover { border-color: #666; }
+  .a-more-05:hover > span { transform: rotate(180deg); }
+}
+
+.a-more-06 { position: relative; display: inline-flex; justify-content: space-between; align-items: center; min-width: 180px; height: 40px; padding: 0.306rem 1.667rem; border: 1px solid #1696F6; color: #111; font-size: 14px; font-weight: 700; letter-spacing: -0.56px; overflow: hidden; transition: all .25s; z-index: 1; }
+.a-more-06::before { content: ""; position: absolute; top: 0; left: 0; width: 0; height: 100%; background: #1696F6; z-index: -1; transition: all .4s; }
+.a-more-06 > p { width: 100%; font-size: 14px; font-weight: 700; letter-spacing: -0.56px; }
+.a-more-06 > span { position: relative; width: 12px; height: 12px; }
+.a-more-06 > span::before { content: ""; position: absolute; top: calc(50% - 3px); right: 0; transform: rotate(40deg) translateY(-50%); width: 8px; height: 2px; background: #1696F6; border-radius: 50%; }
+.a-more-06 > span::after { content: ""; position: absolute; top: calc(50% + 2px); right: -1px; transform: rotate(320deg) translateY(-50%); width: 8px; height: 2px; background: #1696F6; border-radius: 50%; }
+@media ( max-width: 992px ) {
+  .a-more-06 { min-width: 180px; }
+}
+@media ( max-width: 768px ) {
+  .a-more-06 { padding: 1rem 2.889rem; }
+}
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-more-06:hover { color: #fff; }
+  .a-more-06:hover::before { width: 100%; }
+  .a-more-06:hover > span::before, .a-more-06:hover > span::after { background: #fff; }
+}
+
+.a-exlink-02 { display: inline-flex; align-items: center; padding: 1px 1.125rem; background: #006569; color: #fff; font-size: 1rem; font-weight: 400; }
+.a-exlink-02 p { margin-right: 0.875rem; }
+.a-exlink-02 .svg-stroke { stroke: #fff; }
+.a-exlink-02 .svg-fill { fill: #fff; }
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-exlink-02:hover { color: #fff; }
+}
+
+.a-download { display: inline-flex; align-items: center; color: #0070C4; font-size: 18px; font-weight: 700; letter-spacing: -0.034rem; transition: all .25s; }
+.a-download p { margin-right: 5px; }
+.a-download .svg-color { stroke: #0070C4; transition: all .25s; }
+@media (hover: hover), (-ms-high-contrast:none) {
+  .a-download:hover { color: #004887; }
+  .a-download:hover .svg-color { stroke: #004887; }
+}

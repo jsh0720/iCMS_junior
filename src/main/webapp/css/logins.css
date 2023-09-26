@@ -1,0 +1,34 @@
+@charset "utf-8";
+
+body,html{ height:100%}
+body {position:relative; font-family:'Noto Sans KR',sans-serif; background: url('../images/login_bg.jpg') top center no-repeat; background-size: cover; display:flex; justify-content:center; align-items:center;}
+
+.login {text-align: center; /*position: absolute;top: 50%;left: 50%;*/ width:90%}
+/* .login .logo{ background:url(../images/logo.png) no-repeat 50% 0; height:100px; background-size:auto 100%; margin-bottom:3%} */
+.login .logo{ background:url(../images/icms_bk.png) no-repeat 50% 0; height:60px; background-size:auto 100%; margin-bottom:3%}
+.login .login_form { /*width:100%;*/ border:1px solid rgba(0,0,0,0.2); border-top:7px solid #5379fa; background:#fff;letter-spacing:-0.07em;padding:7%;}
+.login .login_form h2 {text-align:center; font-weight:400; margin:0; margin-bottom:25px; font-size:23px;}
+.login .login_form h2 b {}
+.login .login_form .id_pw {width:100%;}
+.login .login_form .id_pw dl {margin-bottom:9px;}
+.login .login_form .id_pw dl dt {display:none;}
+.login .login_form .id_pw dl dd input {width:100% !important; height:49px !important; padding:0 10px;}
+.login .login_form .submit {display:table;font-size:120%;width:100%;height:49px}
+.login .login_form .submit a {display:table-cell; overflow:hidden; border:0; background:#5379fa; color:#fff; text-align:center;vertical-align:middle}
+
+.login .login_form .change_password dl dt {display:inline-block; width:100px;}
+.login .login_form .change_password dl dd {display:inline-block; width:calc(100% - 105px); }
+.login .login_form .change_password dl dd input {width:100%;}
+.login .login_form .change_button {margin-top:10px;}
+.login .login_form .change_button a {width:41%; display:inline-block; color:#fff; padding:5px 15px; }
+.login .login_form .change_button .change {background:#5379fa; }
+.login .login_form .change_button .unchange {background:#B6B6B6; }
+
+.login .login_text {padding:3% 0 0;font-size:1em;text-align:center;clear:both;word-break:keep-all;word-wrap:break-word; line-height:1.3em; opacity:.6}
+
+@media only screen and (min-width: 992px) {
+	.login{width:600px;}
+	.login .login_form .id_pw {float:left;width:calc(100% - 110px);}
+	.login .login_form .submit {float:right;width:100px;height:107px}
+	.login .login_form .change_button a {width:auto; display:inline-block;}
+}

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.member.MemberMapper">
+	<resultMap id="resultMemberVO" type="egovframework.diam.biz.model.member.Dm_member_vo">
+	</resultMap>
+	
+	<sql id="memberListWhere">
+		AND	dm_level &lt; 6
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_id"'>
+					AND	A.dm_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_name"'>
+					AND	A.dm_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_nick"'>
+					AND	A.dm_nick LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_email"'>
+					AND	A.dm_email LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_id LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_name LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_nick LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_email LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test='(search_start_date != "" and search_start_date != null) and (search_end_date != "" and search_end_date != null)'>
+				AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') BETWEEN STR_TO_DATE(#{search_start_date}, '%Y-%m-%d') AND STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+			</when>
+			<otherwise>
+				<if test='search_start_date != "" and search_start_date != null'>
+					AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &gt;= STR_TO_DATE(#{search_start_date}, '%Y-%m-%d')
+				</if>
+				<if test='search_end_date != "" and search_end_date != null'>
+					AND	DATE_FORMAT(A.dm_datetime, '%Y-%m-%d') &lt;= STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+				</if>
+			</otherwise>
+		</choose>			
+		<if test='search_level != "" and search_level != null'>
+			AND	A.dm_level = #{search_level}
+		</if>		
+		<if test='search_status != "" and search_status != null'>
+			AND	A.dm_status = #{search_status}
+		</if>		
+		<if test='search_mailling_agree != "" and search_mailling_agree != null'>
+			AND	A.dm_mailling = #{search_mailling_agree}
+		</if>		
+	</sql>
+	
+	<select id="selectMember" resultMap="resultMemberVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE	dm_no = #{dm_no}
+	</select>
+	
+	<insert id="insertMember">
+		INSERT
+		  INTO	dm_member
+		     (	dm_no,
+		     	dm_id,
+		     	dm_password,
+		     	dm_name,
+		     	dm_nick,
+		     	dm_email,
+		     	dm_level,
+		     	dm_tel,
+		     	dm_hp,
+		     	dm_zip,
+		     	dm_addr1,
+    			dm_addr2,
+    			dm_addr3,
+    			dm_addr_jibeon,
+    			dm_datetime,
+    			dm_ip,
+    			user_se,
+    			dm_status,
+    			dm_sex,
+    			dm_birth_date,
+    			dm_mailling,
+    			dm_sms,
+    			dm_about_me,
+    			esntl_id,
+    			dm_recommend,
+    			dm_homepage,
+    			dm_create_dt,
+    			dm_create_id
+		     )
+	    VALUES
+	     	 (	#{dm_no},
+	     	 	#{dm_id},
+			    #{dm_password},
+	     	 	#{dm_name},
+	     	 	#{dm_nick},
+	     	 	#{dm_email},
+	     	 	#{dm_level},
+	     	 	#{dm_tel},
+	     	 	#{dm_hp},
+	     	 	#{dm_zip},
+	     	 	#{dm_addr1},
+    			#{dm_addr2},
+    			#{dm_addr3},
+    			#{dm_addr_jibeon},
+    			now(),
+    			#{dm_ip},
+    			#{user_se},
+    			#{dm_status},
+    			#{dm_sex},
+    			#{dm_birth_date},
+    			#{dm_mailling},
+    			#{dm_sms},
+    			#{dm_about_me},
+    			#{esntl_id},
+    			#{dm_recommend},
+    			#{dm_homepage},
+    			now(),
+    			#{dm_create_id}
+	     	 )	  
+	</insert>
+	
+	<update id="updateMember">
+		UPDATE	dm_member
+		   SET	dm_name = #{dm_name},
+				dm_nick = #{dm_nick},
+				dm_email = #{dm_email},
+				dm_level = #{dm_level},
+    			dm_tel = #{dm_tel},
+    			dm_hp = #{dm_hp},
+    			dm_zip = #{dm_zip},
+		  	 	dm_addr1 = #{dm_addr1},
+		  	 	dm_addr2 = #{dm_addr2},
+		  	 	dm_addr3 = #{dm_addr3},
+		  	 	<if test='dm_password != "" and dm_password != null'>
+			    	dm_password = #{dm_password},
+			    </if>
+		  	 	dm_addr_jibeon = #{dm_addr_jibeon},
+		  	 	dm_sex = #{dm_sex},
+		  	 	dm_birth_date = #{dm_birth_date},
+		  	 	dm_mailling = #{dm_mailling},
+		  	 	dm_sms = #{dm_sms},
+		  	 	dm_about_me = #{dm_about_me},
+		  	 	dm_recommend = #{dm_recommend},
+		  	 	dm_homepage = #{dm_homepage},
+		  	 	dm_modify_id = #{dm_modify_id},
+		  	 	dm_modify_dt = now()
+		 WHERE	dm_no = #{dm_no}
+	</update>
+	
+	<select id="selectMemberCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_member A
+		 WHERE	1=1
+		   <!-- AND	dm_status = 'J' -->
+		 <include refid="memberListWhere" />
+	</select>
+	
+	<select id="selectMemberList" resultMap="resultMemberVO">
+		SELECT	A.*
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '1002' AND dm_code_value = A.dm_level) AS dm_level_text
+			 ,  (SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '2012' AND dm_code_value = A.dm_status) AS dm_status_text
+		  FROM	dm_member A
+		 WHERE	1=1
+		   <!-- AND	dm_status = 'J' -->
+		 <include refid="memberListWhere" />
+		 ORDER BY dm_no DESC
+		 <if test="page > -1 and rows > 0">
+			 LIMIT	#{page}, #{rows}
+		 </if>
+	</select>
+	
+	<delete id="deleteMember">
+		DELETE 
+		  FROM dm_member
+		 WHERE dm_no = #{dm_no}
+	</delete>
+	
+	<update id="kickMember">
+		UPDATE	dm_member
+		   SET	dm_leave_date = now()
+		   	 ,	dm_status = 'L'
+		 WHERE	dm_no = #{dm_no}
+	</update>
+
+	<select id="selectMemberIdDupChk" resultMap="resultMemberVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE  1=1
+		 <if test="command == '' or command == null">
+		 	AND dm_id = #{dm_id}
+		 </if>
+		 <if test="command == 'id'">
+		 	AND dm_id = #{dm_id}
+		 </if>
+		 <if test="command == 'email'">
+		 	AND dm_email = #{dm_email}
+		 </if>
+		 <if test="command == 'nick'">
+		 	AND dm_nick = #{dm_nick}
+		 	<if test='dm_no != null and dm_no != ""'>
+			 	AND dm_no != #{dm_no}		 	
+		 	</if>
+		 </if>
+		 LIMIT 1
+	</select>
+	
+	<select id="selectMemberInfo" resultMap="resultMemberVO">
+		SELECT  *
+		  FROM  dm_member
+		 WHERE  1=1
+	 	   AND  dm_name = #{dm_name}
+		   AND  dm_email = #{dm_email}
+		   AND  dm_hp = #{dm_hp}
+		 <if test="command == 'pw'">
+		 	AND  dm_id = #{dm_id}	 
+		 </if>
+		   AND  dm_level &lt; 6
+		   AND  dm_status != 'L'
+	</select>
+	
+	<update id="updateMemberPassword">
+		UPDATE  dm_member
+		   SET  dm_password = #{dm_password}
+		 WHERE  dm_id = #{dm_id}
+	</update>
+	
+	<update id="chageMemberStatus">
+		UPDATE  dm_member
+		   SET  dm_modify_id = #{dm_modify_id}
+		     ,  dm_modify_dt = now()
+		<choose>
+			<when test='dm_status == "L"'>
+			 ,  dm_status = 'J'
+			 ,  dm_leave_date = null
+			</when>
+			<when test='dm_status == "D"'>
+			 ,  dm_status = 'J'
+			 ,  dm_fail_cnt = 0
+			</when>
+			<otherwise>
+			 ,  dm_status = 'L'
+			 ,  dm_leave_date = now()
+			</otherwise>
+		</choose>
+		 WHERE  1=1
+		   AND  dm_no = #{dm_no}
+	</update>
+</mapper>

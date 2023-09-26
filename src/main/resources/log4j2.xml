@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<Configuration>
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="[%t] %-5level %logger{1.} - %msg%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+<!--     <Logger name="egovframework" level="debug" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger> -->
+<!--     <Logger name="org.springframework" level="debug" additivity="false">
+    	<AppenderRef ref="Console"/>
+    </Logger> -->
+    <Logger name="jdbc.sqltiming" level="info" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Logger name="jdbc.resultsettable" level="info" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <!-- 배포시 변경-->
+    <Root level="warn">
+      <AppenderRef ref="Console"/>
+    </Root>
+  </Loggers>
+  	<!-- debug -> info -> warn -> error -> fatal -->
+</Configuration>

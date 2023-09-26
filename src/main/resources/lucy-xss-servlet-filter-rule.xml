@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config xmlns="http://www.navercorp.com/lucy-xss-servlet">
+    <defenders>
+        <!-- XssPreventer 등록 -->
+        <defender>
+            <name>xssPreventerDefender</name>
+            <class>egovframework.diam.xss.XssPreventerDefender</class>
+        </defender>
+
+        <!-- XssSaxFilter 등록 -->
+        <defender>
+            <name>xssSaxFilterDefender</name>
+            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssSaxFilterDefender</class>
+            <init-param>
+                <param-value>lucy-xss-sax.xml</param-value>   <!-- lucy-xss-filter의 sax용 설정파일 -->
+                <param-value>false</param-value>        <!-- 필터링된 코멘트를 남길지 여부, 성능 효율상 false 추천 -->
+            </init-param>
+        </defender>
+        <!-- XssFilter 등록 -->
+        <defender>
+            <name>xssFilterDefender</name>
+            <class>com.navercorp.lucy.security.xss.servletfilter.defender.XssFilterDefender</class>
+            <init-param>
+                <param-value>lucy-xss.xml</param-value>    <!-- lucy-xss-filter의 dom용 설정파일 -->
+                <param-value>false</param-value>         <!-- 필터링된 코멘트를 남길지 여부, 성능 효율상 false 추천 -->
+            </init-param>
+        </defender>
+    </defenders>
+
+    <!-- default defender 선언, 필터링 시 지정한 defender가 없으면 여기 정의된 default defender를 사용해 필터링 한다. -->
+    <default>
+        <defender>xssPreventerDefender</defender>
+    </default>
+	
+    <!-- global 필터링 룰 선언 -->
+    <global>
+        <params>
+        	<!-- smarteditor 사용하는 변수에 필터링 미적용, 소스코드에서 별도의 필터링 로직처리 -->
+            <param name="dm_policy_text" useDefender="false"/>
+            <param name="dm_private_text" useDefender="false"/>
+            <param name="dm_reject_text" useDefender="false"/>
+            <param name="wr_content" useDefender="false"/>
+            <param name="dm_basic_content" useDefender="false"/>
+            <param name="dm_header_content" useDefender="false"/>
+            <param name="dm_footer_content" useDefender="false"/>
+            
+            <!-- 사용자페이지 게시판 검색 조건 변수에는 필터링 미적용, 특수문자가 대체되어 오류 발생-->
+            <param name="writeQueryString" useDefender="false"/>
+        </params>
+    </global>
+    
+	<!-- url 별 필터링 룰 선언 -->
+	<url-rule-set>
+		<!-- url disable이 true이면 지정한 url 내의 모든 파라메터는 필터링 되지 않는다. -->
+		<!-- 관리자/사용자 로그인 -->
+		<url-rule>
+			<url disable="true">/adm/member_login.do</url>
+		</url-rule>
+		<url-rule>
+			<url disable="true">/web/login.do</url>
+		</url-rule>
+		
+		<!-- 도메인/기본설정 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_domain_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_domain.do</url>
+		</url-rule>
+		<url-rule>
+			<url disable="true">/adm/set_config_env.do</url>
+		</url-rule>
+		<url-rule>
+			<url disable="true">/adm/set_page_env.do</url>
+		</url-rule> -->
+		
+		<!-- 접근아이피 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_access_ip_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_access_ip.do</url>
+		</url-rule> -->
+		
+		<!-- 메뉴 관리 -->
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_menu.do</url>
+		</url-rule> -->
+		
+		<!-- 레이아웃 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_layout_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_layout.do</url>
+		</url-rule> -->
+		
+		<!-- 페이지 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_page_list.do</url>
+		</url-rule>
+		<url-rule>
+			<url disable="true">/adm/get_page_table.do</url>
+		</url-rule>		
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_page.do</url>
+		</url-rule>		 -->
+			
+		<!-- 관리자 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_admin_list.do</url>
+		</url-rule>	
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_admin.do</url>
+		</url-rule>	 -->
+			
+		<!-- 관리자메뉴 관리 -->	
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_admin_menu.do</url>
+		</url-rule> -->
+				
+		<!-- 관리자메뉴 관리 -->	
+		<url-rule>
+			<url disable="true">/adm/get_group_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="false">/adm/set_group.do</url>
+		</url-rule> -->
+		
+		<!-- 공통코드 관리 -->		
+		<url-rule>
+			<url disable="true">/adm/get_common_code_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_common_code.do</url>
+		</url-rule> -->
+				
+		<!-- 회원 관리 -->	
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_member.do</url>
+		</url-rule> -->
+				
+		<!-- 게시판 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_board_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_board.do</url>
+		</url-rule> -->
+		
+		<!-- FAQ 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_faq_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_faq.do</url>
+		</url-rule> -->
+		
+		<!-- 메인비주얼 관리 -->		
+		<url-rule>
+			<url disable="true">/adm/get_main_visual_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_main_visual.do</url>
+		</url-rule> -->
+		
+		<!-- 팝업 관리 -->	
+		<url-rule>
+			<url disable="true">/adm/get_popup_list.do</url>
+		</url-rule>
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_popup.do</url>
+		</url-rule> -->
+		
+		<!-- 배너 관리 -->
+		<url-rule>
+			<url disable="true">/adm/get_banner_list.do</url>
+		</url-rule>	
+<!-- 		<url-rule>
+			<url disable="true">/adm/set_banner.do</url>
+		</url-rule> -->
+	</url-rule-set>
+</config>

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.statistics.VisitMapper">
+	<resultMap id="resultVisitorVO" type="egovframework.diam.biz.model.statistics.Dm_visit_vo">
+	</resultMap>
+	
+	<sql id="visitWhere">
+		<if test='search_start_date != null and search_start_date != ""'>
+			<![CDATA[ 
+				AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') >= DATE_FORMAT(STR_TO_DATE(#{search_start_date}, '%Y-%m-%d'), '%Y-%m-%d') 
+			]]>
+		</if>
+		<if test='search_end_date != null and search_end_date != ""'>
+			<![CDATA[ 
+				AND DATE_FORMAT(dm_datetime,'%Y-%m-%d') <= DATE_FORMAT(STR_TO_DATE(#{search_end_date}, '%Y-%m-%d'), '%Y-%m-%d') 
+			]]>
+		</if>
+	</sql>
+	
+	<select id="selectTodayTotalAccess" resultType="int">
+		SELECT IFNULL(SUM(dm_count),0) AS 'dm_count'
+		FROM   dm_visit
+		WHERE 1=1
+		<if test="dm_domain != null and dm_domain != ''">
+			AND dm_domain = #{search_domain}
+		</if>
+		<choose>
+			<when test='mode == "total_accessor"'>
+				AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = DATE_FORMAT(Now(), '%Y-%m-%d')
+			</when>
+			<when test='mode == "dash_board"'>
+				<choose>
+					<when test='search_start_date != "" and search_start_date != null'>
+						<include refid="visitWhere"/>
+					</when>
+					<otherwise>
+						AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') = DATE_FORMAT(Now(), '%Y-%m-%d')
+					</otherwise>
+				</choose>
+			</when>
+		</choose>
+	</select>
+	
+	<select id="selectCountMaxTotalAccess" resultType="int">
+		SELECT IFNULL(MAX(b.total),0) AS 'dm_count'
+		FROM   (SELECT Sum(dm_count) AS total
+		        FROM   dm_visit
+		        WHERE 1=1
+		        AND dm_domain = #{dm_domain}
+		        <include refid="visitWhere"/>
+		        <choose>
+		        	<when test="search_type == 'yearMonth'">
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		        	</when>
+		        	<otherwise>
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		        	</otherwise>
+		        </choose>
+		        ) AS b
+	</select>
+	
+	<select id="selectCountMinTotalAccess" resultType="int">
+		SELECT IFNULL(MIN(b.total),0) AS 'dm_count'
+		FROM   (SELECT Sum(dm_count) AS total
+		        FROM   dm_visit
+		        WHERE 1=1
+		        AND dm_domain = #{dm_domain}
+		        <include refid="visitWhere"/>
+		        <choose>
+		        	<when test="search_type == 'yearMonth'">
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		        	</when>
+		        	<otherwise>
+		        		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		        	</otherwise>
+		        </choose>
+		        ) AS b
+	</select>
+	
+	<select id="selectDatetimeTotalAccess" resultMap="resultVisitorVO">
+		SELECT DATE_FORMAT(dm_datetime, '%Y-%m-%d') AS 'dm_datetime'
+		FROM   dm_visit
+		WHERE  1 = 1
+		AND dm_domain = #{dm_domain}
+		<include refid="visitWhere"/>
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		HAVING SUM(dm_count) = #{dm_count}
+	</select>
+	
+	<select id="selectVisitDayName" resultType="String">
+		SELECT CASE
+		         WHEN DAYOFWEEK(dm_datetime) = 1 THEN '일요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 2 THEN '월요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 3 THEN '화요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 4 THEN '수요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 5 THEN '목요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 6 THEN '금요일'
+		         WHEN DAYOFWEEK(dm_datetime) = 7 THEN '토요일'
+		       END AS `max_date`
+		FROM   dm_visit
+		WHERE dm_domain = #{dm_domain}
+		<include refid="visitWhere"/>
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+		HAVING SUM(dm_count) = #{dm_count}
+		LIMIT 1
+	</select>
+	
+	<select id="selectYearMonthTotalAccess" resultMap="resultVisitorVO">
+		SELECT DATE_FORMAT(dm_datetime, '%Y-%m') AS 'dm_datetime'
+		FROM   dm_visit
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		<include refid="visitWhere"/>
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m')
+		HAVING SUM(dm_count) = #{dm_count}
+	</select>
+
+	<select id="selectYearMonthList" resultMap="resultVisitorVO">
+		SELECT DATE_FORMAT(dm_datetime, '%Y-%m') AS 'dm_datetime'
+		FROM dm_visit
+		WHERE 1=1
+		AND dm_domain = #{dm_domain}
+		<include refid="visitWhere"/>
+		GROUP BY DATE_FORMAT(dm_datetime, '%Y-%m')
+	</select>
+	
+	<select id="selectTimeVisitAccess" resultMap="resultVisitorVO">
+		SELECT DATE_FORMAT(dm_datetime, '%H:00') AS 'dm_date',
+		       IFNULL(SUM(dm_count), 0)          AS 'dm_visit_count',
+		       (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  dm_re_visit = 're_visit'
+		               AND l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%H') =
+		                   DATE_FORMAT(v.dm_datetime, '%H')
+		               AND dm_domain = #{dm_domain}
+		               <include refid="visitWhere"/>)
+		                                         AS 'dm_re_visit_count',
+		       (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  dm_re_visit = 'visit'
+		               AND l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%H') =
+		                   DATE_FORMAT(v.dm_datetime, '%H')
+		               AND dm_domain = #{dm_domain}
+		               <include refid="visitWhere"/>)
+		                                         AS 'dm_new_visit_count',
+		       (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%H') =
+		                   DATE_FORMAT(v.dm_datetime, '%H')
+		               AND dm_domain = #{dm_domain}
+		               <include refid="visitWhere"/>)
+		                                         AS 'dm_page_view_count'
+		FROM   dm_visit AS v
+		WHERE DATE_FORMAT(dm_datetime, '%H') = #{dm_datetime}
+		AND dm_domain = #{dm_domain}
+		<include refid="visitWhere"/>
+		GROUP  BY DATE_FORMAT(dm_datetime, '%H')
+	</select>
+	
+	<select id="selectTotalAccess" resultType="int">  
+		SELECT IFNULL(SUM(dm_count),0) AS 'dm_count'
+		FROM   dm_visit
+		WHERE 1=1
+	</select>
+	
+	<select id="selectStatisticsCount" resultMap="resultVisitorVO">
+		SELECT (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  1=1
+		        <if test="dm_domain != null and dm_domain != ''">
+		        	   AND l.dm_domain = #{dm_domain}
+		        </if>
+		               AND l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%Y-%m-%d') =
+		                   DATE_FORMAT(v.dm_datetime, '%Y-%m-%d')) AS 'dm_visit_count',
+		       (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  1=1
+		        <if test="dm_domain != null and dm_domain != ''">
+		        	   AND l.dm_domain = #{dm_domain}
+		        </if>
+		               AND dm_re_visit = 're_visit'
+		               AND l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%Y-%m-%d') =
+		                   DATE_FORMAT(v.dm_datetime, '%Y-%m-%d')) AS
+		       'dm_re_visit_count',
+		       (SELECT COUNT(*)
+		        FROM   dm_web_log AS l
+		        WHERE  1=1
+		        <if test="dm_domain != null and dm_domain != ''">
+		        	   AND l.dm_domain = #{dm_domain}
+		        </if>
+		               AND dm_re_visit = 'visit'
+		               AND l.dm_fn_code = 'page'
+		               AND DATE_FORMAT(l.dm_datetime, '%Y-%m-%d') =
+		                   DATE_FORMAT(v.dm_datetime, '%Y-%m-%d')) AS
+		       'dm_new_visit_count'
+		FROM   dm_visit AS v
+		WHERE  1=1
+		<if test="dm_domain != null and dm_domain != ''">
+			   AND dm_domain = #{dm_domain}
+		</if>
+		       AND DATE_FORMAT(dm_datetime, '%Y-%m-%d') BETWEEN #{search_start_date} AND #{search_end_date}
+		GROUP  BY DATE_FORMAT(dm_datetime, '%Y-%m-%d')
+	</select>
+	
+	<select id="checktVisit" resultType="int">
+		SELECT COUNT(*)
+		FROM   dm_visit
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_type = #{dm_type}
+		       AND dm_domain = #{dm_domain}
+		       AND dm_page_name = #{dm_page_name}
+	</select>
+	
+	<insert id="insertVisit">
+		INSERT INTO dm_visit
+		            (dm_datetime,
+		             dm_count,
+		             dm_type,
+		             dm_page_name,
+		             dm_domain)
+		VALUES      (
+					 #{dm_datetime},
+		             #{dm_count},
+		             #{dm_type},
+		             #{dm_page_name},
+		             #{dm_domain})
+	</insert>
+	<update id="updateCountVisit">
+		UPDATE dm_visit
+		SET    dm_count = dm_count + 1
+		WHERE  dm_datetime = #{dm_datetime}
+		       AND dm_type = #{dm_type}
+		       AND dm_domain = #{dm_domain}
+		       AND dm_page_name = #{dm_page_name}
+	</update>
+</mapper>

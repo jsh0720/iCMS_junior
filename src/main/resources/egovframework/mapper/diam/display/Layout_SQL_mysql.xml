@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.display.LayoutMapper">
+	<resultMap id="resultLayoutVO" type="egovframework.diam.biz.model.display.Dm_layout_vo">
+	</resultMap>
+	
+	<sql id="selectLayoutListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_layout_nm"'>
+					AND	A.dm_layout_nm LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_layout_folder"'>
+					AND	A.dm_layout_folder LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_layout_nm LIKE CONCAT('%', #{search_value} ,'%') 
+			 			OR A.dm_layout_folder LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+
+	<select id="selectLayoutListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_layout A
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectLayoutListWhere"/>
+	</select>
+	
+	<select id="selectLayoutList" resultMap="resultLayoutVO">
+		SELECT	*
+		  FROM  dm_layout A
+		 WHERE	1=1
+		   AND  dm_delete_yn = 'N'
+		 <include refid="selectLayoutListWhere"/>
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectLayout" resultMap="resultLayoutVO">
+		SELECT	dm_id
+			 ,	dm_layout_nm
+			 ,	dm_layout_folder
+			 ,	dm_create_dt
+			 ,	dm_create_id
+			 ,	dm_modify_dt
+			 ,	dm_modify_id
+		  FROM  dm_layout 
+		 WHERE	dm_id = #{dm_id}
+	</select>
+	
+	<insert id="insertLayout">
+		INSERT	
+		  INTO	dm_layout
+		  	 (	dm_layout_nm
+		  	 ,	dm_layout_folder
+		  	 ,	dm_create_dt
+		  	 ,	dm_create_id
+		  	 )
+		VALUES
+			 (	#{dm_layout_nm}
+			 ,	#{dm_layout_folder}
+			 ,	now()
+			 ,	#{dm_create_id}		 
+			 )
+	</insert>
+	
+	<update id="updateLayout">
+		UPDATE	dm_layout
+		   SET	dm_layout_nm = #{dm_layout_nm}
+		   	 ,	dm_modify_dt = now()
+		   	 ,	dm_modify_id = #{dm_modify_id}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<update id="deleteLayout">
+		UPDATE  dm_layout
+		   SET  dm_layout_folder = #{dm_layout_folder}
+		     ,  dm_delete_dt = now()
+		     ,  dm_delete_id = #{dm_delete_id}
+		     ,  dm_delete_yn = 'Y'
+		 WHERE  1=1
+		   AND  dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectLayoutCombo" resultMap="resultLayoutVO">
+		SELECT	*
+		  FROM	dm_layout
+		 WHERE	1=1
+	</select>
+	
+	<select id="selectLayoutFolderDupCnt" resultType="int">
+		SELECT  COUNT(*)
+		  FROM  dm_layout
+		 WHERE  1=1
+		   AND  dm_layout_folder = #{dm_layout_folder}
+	</select>
+</mapper>

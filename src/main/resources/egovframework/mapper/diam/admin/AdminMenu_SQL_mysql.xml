@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.admin.AdminMenuMapper">
+	<resultMap id="resultMapAdminMenuVO" type="egovframework.diam.biz.model.admin.Dm_access_admin_menu_vo"></resultMap>
+	<select id="selectAdminMenuList" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+			 ,	IFNULL((SELECT dm_title FROM dm_access_admin_menu WHERE dm_id = A.dm_parent_id), '상위메뉴없음') AS dm_parent_text
+		  FROM	dm_access_admin_menu A
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectAdminMenuRootChild" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+			 ,	IFNULL((SELECT dm_title FROM dm_access_admin_menu WHERE dm_id = A.dm_parent_id), '상위메뉴없음') AS dm_parent_text
+		  FROM	dm_access_admin_menu A
+		 WHERE	A.dm_parent_id != '0'
+		   AND  A.dm_delete_yn = 'N'
+	  ORDER BY	A.dm_view_order
+	</select>
+	
+	<insert id="insertAdminMenu">
+		INSERT
+		  INTO	dm_access_admin_menu
+		  	 (	dm_title,
+		  	 	dm_parent_id,
+		  	 	dm_link_url,
+		  	 	dm_access_level,
+		  	 	dm_status,
+		  	 	dm_view_order,
+		  	 	dm_depth,
+		  	 	dm_create_dt,
+		  	 	dm_create_id
+		  	 )
+	    VALUES
+	     	 (	#{dm_title},
+	     	 	#{dm_parent_id},
+	     	 	#{dm_link_url},
+	     	 	#{dm_access_level},
+	     	 	#{dm_status},
+	     	 	#{dm_view_order},
+	     	 	#{dm_depth},
+     			now(),
+     			#{dm_create_id}
+	     	 )    		
+	</insert>
+	
+	<update id="updateAdminMenu">
+		UPDATE	dm_access_admin_menu
+		   SET	dm_title = #{dm_title}
+	    	 ,	dm_link_url = #{dm_link_url}
+	    	 ,	dm_access_level = #{dm_access_level}
+    		 ,	dm_status = #{dm_status}
+    		 ,	dm_view_order = #{dm_view_order}
+    		 ,	dm_modify_dt = now()
+    		 ,	dm_modify_id = #{dm_modify_id}
+    	 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectAdminMenuListByParentId" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+		  FROM	dm_access_admin_menu
+		 WHERE	dm_parent_id = #{dm_parent_id}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<update id="deleteAdminMenuByDmid">
+		UPDATE	dm_access_admin_menu
+		   SET  dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		      , dm_delete_id = #{dm_delete_id}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectAdminMenuListMain" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+		  FROM	dm_access_admin_menu
+		 WHERE	dm_parent_id = #{dm_parent_id}
+		   AND	dm_access_level &lt;= CAST(#{dm_access_level} AS SIGNED)
+		   AND	dm_status = 1
+		   AND  dm_delete_yn = 'N'
+	  ORDER BY	dm_view_order ASC
+	</select>
+	
+	<select id="selectAdminMenuByParentId" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+		  FROM	dm_access_admin_menu
+		 WHERE	dm_id = #{dm_parent_id}
+	</select>
+	
+	<select id="selectAdminMenuByDmId" resultMap="resultMapAdminMenuVO">
+		SELECT	*
+		  FROM	dm_access_admin_menu
+		 WHERE	dm_id= #{dm_id}
+	</select>
+	
+	<select id="selectAdminTreeMenu" resultMap="resultMapAdminMenuVO">
+		WITH RECURSIVE CTE AS (
+				SELECT  dm_id, dm_parent_id, dm_title, dm_depth 
+				  FROM  dm_access_admin_menu 
+				 WHERE  dm_id = #{dm_id}
+				   AND  dm_delete_yn = 'N'
+			 UNION ALL
+				SELECT  a.dm_id, a.dm_parent_id, a.dm_title, a.dm_depth 
+				  FROM  dm_access_admin_menu AS a
+			INNER JOIN  CTE AS b 
+					ON  a.dm_parent_id = b.dm_id
+			 	 WHERE  a.dm_delete_yn = 'N'
+		)
+		SELECT  dm_id
+			  , dm_parent_id
+			  , dm_title
+			  , dm_depth 
+		  FROM  CTE
+	</select>
+	
+	<select id="selectAdminMenuUrlDupCheck" resultType="integer">
+		SELECT COUNT(dm_id)
+		  FROM dm_access_admin_menu
+		 WHERE 1 = 1
+		   AND dm_link_url = #{dm_link_url}
+		   AND dm_delete_yn = 'N'
+		<if test='dm_id != null and dm_id != ""'>
+		   AND dm_id != #{dm_id}
+		</if>
+	</select>
+</mapper>

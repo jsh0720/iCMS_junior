@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.LoginAuthMapper">
+	<resultMap id="loginVO" type="egovframework.diam.cmm.model.LoginVO">
+		<result property="id" column="dm_id"/>
+		<result property="name" column="dm_name"/>
+		<result property="email" column="dm_email"/>
+		<result property="password" column="dm_password"/>
+		<result property="ip" column="dm_ip"/>
+		<result property="dm_datetime" column="dm_datetime"/>
+		<result property="dm_fn_code" column="dm_fn_code"/>
+		<result property="dm_fn_result" column="dm_fn_result"/>
+		<result property="dm_fn_url" column="dm_fn_url"/>
+		<result property="dm_agent_info" column="dm_agent_info"/>
+		<result property="dm_type" column="dm_type"/>
+		<result property="dm_level" column="dm_level"/>
+		<result property="dm_leave_date" column="dm_leave_date"/>
+		<result property="dm_fail_cnt" column="dm_fail_cnt"/>
+		<result property="dm_fail_time" column="dm_fail_time"/>		
+		<result property="userSe" column="user_se"/>
+		<result property="dm_status" column="dm_status"/>
+		<result property="group_id" column="group_id"/>
+		<result property="uniqId" column="esntl_id"/>
+		<result property="dm_no" column="dm_no"/>
+	</resultMap>
+	
+	<select id="actionLogin" resultMap="loginVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE	dm_id = #{id}
+		   AND	dm_password = #{password}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<insert id="insertLoginLog">
+		INSERT
+		  INTO	dm_login_log
+		  	 (	dm_datetime,
+		  	 	dm_login_id,
+		  	 	dm_ip,
+		  	 	dm_fn_code,
+		  	 	dm_fn_result,
+		  	 	dm_fn_url,
+		  	 	dm_agent_info,
+		  	 	dm_type
+		  	  )
+	    VALUES
+	    	 (	now(),
+	    	 	#{id},
+	    	 	#{ip},
+	    	 	#{dm_fn_code},
+	    	 	#{dm_fn_result},
+	    	 	#{dm_fn_url},
+	    	 	#{dm_agent_info},
+	    	 	#{dm_type}
+	    	 )
+	</insert>
+	
+	<select id="selectLoginInfo" resultMap="loginVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE	dm_id = #{id}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectLoginFailCnt" resultType="int">
+		SELECT	IFNULL(dm_fail_cnt, 0)
+		  FROM	dm_member
+		 WHERE	dm_id = #{id}
+	</select>
+	
+	<update id="updateMemberUnlock">
+		UPDATE	dm_member
+		   SET	dm_status = 'J'
+		   	 ,	dm_fail_cnt = null
+		   	 ,	dm_fail_time = null
+		   	 ,  dm_login_date = now()
+		 WHERE	dm_id = #{id}
+	</update>
+	
+	<update id="updateLoginFailCnt">
+		UPDATE	dm_member
+		   SET	dm_fail_cnt = IFNULL(dm_fail_cnt, 0) + 1
+		     ,	dm_fail_time = now()
+		 WHERE	dm_id = #{id}
+	</update>
+	
+	<update id="updateLoginFailCntLock">
+		UPDATE	dm_member
+		   SET	dm_status = 'D'
+		   	 ,	dm_fail_cnt = IFNULL(dm_fail_cnt, 0) + 1
+		   	 ,	dm_fail_time = now()
+		 WHERE	dm_id = #{id}
+	</update>	
+	
+	<update id="updateMemberPasswordChange">
+		UPDATE	dm_member
+		   SET	dm_password = #{password}
+		 WHERE	dm_status = 'J'
+		   AND	dm_id = #{id}
+	</update>
+</mapper>

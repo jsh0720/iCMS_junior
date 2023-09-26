@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.board.FaqMapper">
+	<resultMap id="resultFaqVO" type="egovframework.diam.biz.model.board.Dm_faq_vo">
+	</resultMap>
+	
+	<sql id="selectFaqListWhere">
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_question"'>
+					AND	A.dm_question LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<when test='search_type == "dm_answer"'>
+					AND	A.dm_answer LIKE CONCAT('%', #{search_value}, '%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_question LIKE CONCAT ('%', #{search_value} , '%') 
+						OR A.dm_answer LIKE CONCAT ('%', #{search_value} , '%')
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_status != "" and search_status != null'>
+			AND A.dm_status = #{search_status}
+		</if>
+		<if test='search_domain != "" and search_domain != null'>
+			AND A.dm_domain = #{search_domain}
+		</if>
+	</sql>
+	
+	<select id="selectFaqListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_faq A
+		INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+		 WHERE	1=1
+	 	<include refid="selectFaqListWhere"/>
+	</select>
+	
+	<select id="selectFaqList" resultMap="resultFaqVO">
+	 	SELECT	*
+	 		 ,	IFNULL((SELECT dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인 정보없음') as dm_domain_nm
+	 		 ,	(SELECT	dm_code_name FROM dm_common_code WHERE dm_code_group = '1001' AND A.dm_status = dm_code_value) as dm_state_txt
+	 	  FROM	dm_faq A
+	 	INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+	 	 WHERE	1=1
+	 	<include refid="selectFaqListWhere"/>
+		ORDER BY A.dm_order ASC, A.dm_status DESC
+		LIMIT #{page}, #{rows}
+	</select>
+	 
+	<select id="selectFaq" resultMap="resultFaqVO">
+		SELECT	A.* 
+			 ,	IFNULL((SELECT dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인 정보없음') as dm_domain_nm
+		  FROM	dm_faq A
+		 WHERE	A.dm_id = #{dm_id}
+	</select>
+	 
+	<insert id="insertFaq">
+		INSERT 
+		   INTO	dm_faq (
+			dm_domain,
+			dm_question,
+			dm_answer,
+			dm_order,
+			dm_status,
+			dm_create_dt,
+			dm_create_id
+		) VALUE (
+			#{dm_domain},
+			#{dm_question},
+			#{dm_answer},
+			#{dm_order},
+			#{dm_status},
+			now(),
+			#{dm_create_id}
+		)
+	</insert>
+	 
+	<update id="updateFaq">
+		UPDATE	dm_faq 
+		   SET	dm_question = #{dm_question}
+		     ,	dm_answer = #{dm_answer}
+		     ,	dm_order = #{dm_order}
+		     ,	dm_status = #{dm_status}
+		     ,	dm_modify_dt = now()
+		     ,	dm_modify_id = #{dm_modify_id}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	 
+	<delete id="deleteFaq">
+		DELETE 
+		  FROM	dm_faq
+		 WHERE	dm_id = #{dm_id}
+	</delete>
+	
+	<select id="selectFaqListForWeb" resultMap="resultFaqVO">
+		SELECT	*
+			 ,	(SELECT	dm_code_name FROM dm_common_code WHERE dm_code_group = '1001' AND A.dm_status = dm_code_value) as dm_state_txt
+		  FROM	dm_faq A
+		 WHERE	A.dm_domain = #{dm_domain}
+		   AND	A.dm_status = 1
+	  ORDER BY	dm_order
+	</select>		
+</mapper>

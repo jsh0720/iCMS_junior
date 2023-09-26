@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.config.DomainMapper">
+	<resultMap id="resultDomainVO" type="egovframework.diam.biz.model.config.Dm_domain_list_vo"/>
+	
+	<sql id="selectDomainListWhere">
+		<if test="search_value != '' and search_value != null">
+			<choose>
+				<when test='search_type == "dm_domain_nm"'>
+					AND	A.dm_domain_nm LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_domain_root"'>
+					AND	A.dm_domain_root LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(A.dm_domain_nm LIKE CONCAT('%', #{search_value} ,'%') OR A.dm_domain_root LIKE CONCAT('%', #{search_value} ,'%'))
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_status != "" and search_status != null'>
+			AND	A.dm_domain_status = #{search_status}
+		</if>
+	</sql>
+	
+	<select id="selectDomainListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_domain_list A
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		 <include refid="selectDomainListWhere"/>
+	</select>
+	
+	<select id="selectDomainList" resultMap="resultDomainVO">
+		   SELECT  A.*
+				 , (SELECT dm_code_name FROM dm_common_code WHERE dm_code_group='1001' AND	dm_code_value = A.dm_domain_status) as dm_domain_status_nm
+				 , B.dm_url AS domain_url
+				 , C.dm_layout_nm AS theme_text
+		  	 FROM  dm_domain_list A
+		LEFT JOIN  (SELECT dm_domain_id, dm_url FROM dm_config) B
+		  	   ON  A.dm_id = B.dm_domain_id
+		LEFT JOIN  (SELECT D.dm_id, D.dm_domain_id, D.dm_theme, E.dm_layout_nm FROM dm_config AS D INNER JOIN dm_layout AS E ON D.dm_theme = E.dm_id AND E.dm_delete_yn = 'N') C
+		       ON  A.dm_id = C.dm_domain_id
+			WHERE  1=1
+		      AND  A.dm_delete_yn = 'N'
+		 <include refid="selectDomainListWhere"/>
+	 	    LIMIT  #{page}, #{rows}
+	</select>
+	
+	<select id="selectDomainByDmid" resultMap="resultDomainVO">
+		SELECT	*
+		  FROM	dm_domain_list
+		 WHERE	dm_id = #{dm_id}
+	</select>
+	
+	<update id="deleteDomain">
+		UPDATE	dm_domain_list
+		   SET  dm_delete_id = #{dm_delete_id}
+		      , dm_delete_yn = 'Y'
+		      , dm_delete_dt = now()
+		      , dm_domain_root = #{dm_domain_root}
+		 WHERE	dm_id= #{dm_id}
+	</update>
+	
+	<insert id="insertDomain" useGeneratedKeys="true" keyColumn="dm_id" keyProperty="dm_id">
+		INSERT
+		  INTO	dm_domain_list
+		  	 (	dm_domain_nm,
+		  	 	dm_domain_root,
+		  	 	dm_domain_status,
+		  	 	dm_domain_description,
+		  	 	dm_domain_main,
+		  	 	dm_create_id,
+		  	 	dm_create_dt
+		  	 )
+		VALUES
+			 (	#{dm_domain_nm},
+			 	#{dm_domain_root},
+			 	#{dm_domain_status},
+			 	#{dm_domain_description},
+			 	#{dm_domain_main},
+			 	#{dm_create_id},
+			 	now()
+			 )	
+	</insert>	
+		
+	<select id="selectDomainMainCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_domain_list
+		 WHERE	dm_domain_main = '1'
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<select id="selectDomainRootDupCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_domain_list
+		 WHERE	dm_domain_root = #{dm_domain_root}
+		   AND  dm_delete_yn = 'N'
+	</select>
+	
+	<update id="updateDomain">
+		UPDATE	dm_domain_list
+		   SET	dm_domain_nm = #{dm_domain_nm}
+			 ,	dm_domain_status = #{dm_domain_status}
+			 ,	dm_domain_description = #{dm_domain_description}
+			 ,	dm_domain_main = #{dm_domain_main}
+			 ,  dm_modify_id = #{dm_modify_id}
+			 ,  dm_modify_dt = now()
+		 WHERE	dm_id = #{dm_id}
+	</update>	
+	
+	<select id="selectDomainMain" resultMap="resultDomainVO">
+		SELECT	*
+		  FROM	dm_domain_list
+		 WHERE	dm_domain_main = '1'
+		   AND  dm_delete_yn = 'N'
+	</select>
+</mapper> 

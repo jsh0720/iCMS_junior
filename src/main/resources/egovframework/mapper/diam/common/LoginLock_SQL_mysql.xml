@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.cmm.db.LoginLockMapper">
+	<resultMap id="resultMemeberVO" type="egovframework.diam.biz.model.member.Dm_member_vo">
+	</resultMap>
+	
+	<sql id="selectLoginLockListWhere">
+		AND	A.dm_level &lt; 6
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_id"'>
+					AND	A.dm_id LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<when test='search_type == "dm_name"'>
+					AND	A.dm_name LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	(
+						A.dm_id LIKE CONCAT('%', #{search_value} ,'%') 
+						OR A.dm_name LIKE CONCAT('%', #{search_value} ,'%') 
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<if test='search_level != "" and search_level != null'>
+			AND	A.dm_level = #{search_level}
+		</if>
+		<if test="search_start_date != null and search_start_date != ''">
+			AND	DATE_FORMAT(A.dm_fail_time, '%Y-%m-%d') &gt;= STR_TO_DATE(#{search_start_date}, '%Y-%m-%d')
+		</if>
+		
+		<if test="search_end_date != null and search_end_date != ''">
+			AND	DATE_FORMAT(A.dm_fail_time, '%Y-%m-%d') &lt;= STR_TO_DATE(#{search_end_date}, '%Y-%m-%d')
+		</if>
+	</sql>
+	
+	<select id="selectLoginLockListCnt" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_member A
+		 WHERE	A.dm_status = 'D'
+		   AND  A.dm_delete_yn = 'N'
+		<include refid="selectLoginLockListWhere"/>
+	</select>
+	
+	<select id="selectLoginLockList" resultMap="resultMemeberVO">
+		SELECT	A.*
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '1002' AND dm_code_value = A.dm_level) AS dm_level_text
+		  FROM	dm_member A
+		 WHERE	A.dm_status  = 'D'
+		   AND  A.dm_delete_yn = 'N'
+		<include refid="selectLoginLockListWhere"/>
+	  ORDER BY	A.dm_fail_time desc
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectLockMember" resultMap="resultMemeberVO">
+		SELECT	*
+		  FROM	dm_member
+		 WHERE	dm_status = 'D'
+		   AND	dm_no = #{dm_no}
+	</select>
+	
+	<update id="unlockMember">
+		UPDATE	dm_member
+		   SET	dm_status = 'J'
+		     ,	dm_fail_cnt = null
+		     ,	dm_fail_time = null
+		 WHERE	dm_no = #{dm_no}
+		   AND	dm_status = 'D'
+	</update>	
+</mapper>

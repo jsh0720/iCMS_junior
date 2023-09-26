@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.design.BannerMapper">
+	<resultMap id="resultBannerVO" type="egovframework.diam.biz.model.design.Dm_banners_vo"> 
+	</resultMap>
+	
+	<sql id="selectBannerListWhere">
+		<if test='search_value != "" and search_value != null'>
+			<choose>
+				<when test='search_type == "dm_banner_nm"'>
+					AND	A.dm_banner_nm LIKE CONCAT('%', #{search_value} ,'%')
+				</when>
+				<otherwise>
+					AND	A.dm_banner_nm LIKE CONCAT('%', #{search_value} ,'%') 	
+				</otherwise>
+			</choose>		
+		</if>
+		
+		<if test="search_start_date != '' and search_start_date != null">
+			<![CDATA[
+				AND	STR_TO_DATE(#{search_start_date}, '%Y-%m-%d') <= DATE_FORMAT(A.dm_start_dt, '%Y-%m-%d')
+			]]>
+		</if>
+		<if test="search_end_date != '' and search_end_date != null">
+			<![CDATA[
+				AND	STR_TO_DATE(#{search_end_date}, '%Y-%m-%d') >= DATE_FORMAT(A.dm_end_dt, '%Y-%m-%d')
+			]]>
+		</if>
+		
+		<if test='search_status != null and search_status != ""'>
+			AND	A.dm_status = #{search_status}
+		</if>
+			
+		<if test='search_domain != null and search_domain != ""'>
+			AND	A.dm_domain = #{search_domain}
+		</if>		
+	</sql>
+	
+	<select id="selectBannerListCnt" parameterType="egovframework.diam.biz.model.design.Dm_popup_vo" resultType="int">
+		SELECT	COUNT(*)
+		  FROM	dm_banners A
+		  INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		<include refid="selectBannerListWhere"/>
+	</select>	
+	
+	<select id="selectBannerList" resultMap="resultBannerVO">
+		SELECT	*
+			 ,	IFNULL((SELECT dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인정보없음') AS dm_domain_text
+			 ,	(SELECT dm_code_name FROM dm_common_code WHERE dm_code_group = '1001' AND dm_code_value = A.dm_status) AS dm_status_text
+		  FROM	dm_banners A
+		  INNER JOIN dm_domain_list B ON A.dm_domain = B.dm_id AND B.dm_delete_yn = 'N'
+		 WHERE	1=1
+		   AND  A.dm_delete_yn = 'N'
+		<include refid="selectBannerListWhere"/>
+		ORDER BY A.dm_id desc
+		 LIMIT	#{page}, #{rows}
+	</select>
+	
+	<select id="selectBanner" resultMap="resultBannerVO">
+		SELECT	A.*
+			 ,	IFNULL((SELECT dm_domain_nm FROM dm_domain_list WHERE dm_id = A.dm_domain), '도메인정보없음') AS dm_domain_text
+		  FROM	dm_banners A
+		 WHERE	A.dm_id = #{dm_id}
+	</select>	
+	
+	<insert id="insertBanner">
+		INSERT
+		  INTO	dm_banners
+		  	 (	dm_domain
+		  	 ,	dm_banner_nm
+		  	 ,	dm_banner_img
+		  	 ,	dm_banner_img_ori
+		  	 ,	dm_start_dt
+		  	 ,	dm_end_dt
+		  	 ,	dm_link
+		  	 ,	dm_link_type
+		  	 ,	dm_order
+		  	 ,	dm_status
+		  	 ,	dm_is_infinite
+		  	 ,	dm_create_dt
+		  	 ,	dm_create_id		  	 
+		  	 )
+	    VALUES
+	    	 (	#{dm_domain}
+	    	 ,	#{dm_banner_nm}
+	    	 ,	#{dm_banner_img}
+	    	 ,	#{dm_banner_img_ori}
+	    	 ,	#{dm_start_dt}
+	    	 ,	#{dm_end_dt}
+	    	 ,	#{dm_link}
+	    	 ,	#{dm_link_type}
+	    	 ,	#{dm_order}
+	    	 ,	#{dm_status}
+	    	 <choose>
+			    <when test='dm_is_infinite == "1"'>
+			    , 1
+			    </when>
+		     	<otherwise>
+		     	, 0
+		     	</otherwise>
+		     </choose>
+	    	 ,	now()
+	    	 ,	#{dm_create_id}	    	 
+	    	 )	  	
+	</insert>
+	
+	<update id="updateBanner">
+		UPDATE	dm_banners
+		   SET	dm_banner_nm = #{dm_banner_nm}
+	  		 ,	dm_banner_img = #{dm_banner_img}
+	  		 ,	dm_banner_img_ori = #{dm_banner_img_ori}
+	  		 ,	dm_start_dt = #{dm_start_dt}
+	  		 ,	dm_end_dt = #{dm_end_dt}
+	  		 ,	dm_link = #{dm_link}
+	  		 ,	dm_link_type = #{dm_link_type}
+	  		 ,	dm_order = #{dm_order}
+	  		 ,	dm_status = #{dm_status}
+	  		 ,  dm_is_infinite = 
+		     <choose>
+			    <when test='dm_is_infinite == "1"'>
+			    	1
+			    </when>
+		     	<otherwise>
+		     		0
+		     	</otherwise>
+		     </choose>
+	  		 ,	dm_modify_dt = now()
+	  		 ,	dm_modify_id = #{dm_create_id}
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<update id="deleteBanner">
+		UPDATE	dm_banners
+		   SET  dm_delete_id = #{dm_delete_id}
+		      , dm_delete_dt = now()
+		      , dm_delete_yn = 'Y'
+		 WHERE	dm_id = #{dm_id}
+	</update>
+	
+	<select id="selectBannerListForWeb" resultMap="resultBannerVO">
+		SELECT	*
+		  FROM	dm_banners
+		 WHERE	dm_status = '1'
+		   AND  dm_delete_yn = 'N'
+		   AND	dm_domain = #{dm_domain}
+		   AND	(
+					(DATE_FORMAT(now(), '%Y%m%d%H%i%s') BETWEEN DATE_FORMAT(dm_start_dt, '%Y%m%d%H%i%s') AND DATE_FORMAT(dm_end_dt, '%Y%m%d%H%i%s')) 
+					OR dm_is_infinite = '1'
+				)
+	  ORDER BY	dm_order
+	</select>
+</mapper>

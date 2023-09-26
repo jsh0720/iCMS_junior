@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="CIRCLE_BG_MENU_NEW" width="3101" height="2491.844" viewBox="0 0 3101 2491.844">
+    <defs>
+        <style>
+            .cls-2,.cls-4{fill:none}.cls-2{stroke:#f4f4f4;stroke-linecap:round}.cls-3{stroke:none}
+        </style>
+    </defs>
+    <g id="타원_1" class="cls-2" transform="translate(2228 816.999)">
+        <circle cx="249" cy="249" r="249" class="cls-3"/>
+        <circle cx="249" cy="249" r="248.5" class="cls-4"/>
+    </g>
+    <g id="타원_2" class="cls-2" transform="rotate(-45 1141.201 472.701)">
+        <ellipse cx="668.5" cy="1093.5" class="cls-3" rx="668.5" ry="1093.5"/>
+        <ellipse cx="668.5" cy="1093.5" class="cls-4" rx="668" ry="1093"/>
+    </g>
+    <g id="타원_3" class="cls-2" transform="rotate(40 1166.786 3394.2)">
+        <ellipse cx="308.5" cy="1043.5" class="cls-3" rx="308.5" ry="1043.5"/>
+        <ellipse cx="308.5" cy="1043.5" class="cls-4" rx="308" ry="1043"/>
+    </g>
+</svg>

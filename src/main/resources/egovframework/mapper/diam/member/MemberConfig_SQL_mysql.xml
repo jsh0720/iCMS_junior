@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="egovframework.diam.biz.db.member.MemberConfigMapper">
+	<resultMap id="resultMemberConfigVO" type="egovframework.diam.biz.model.member.Dm_member_config_vo">
+	</resultMap>
+	
+	<select id="selectMemberConfig" resultMap="resultMemberConfigVO">
+		SELECT  *
+		  FROM  dm_member_config
+		 LIMIT 1
+	</select>
+	
+	<update id="updateMemberConfig">
+		UPDATE  dm_member_config
+		   SET  dm_is_member = #{dm_is_member}
+			  , dm_use_nick = #{dm_use_nick}
+			  , dm_require_nick = #{dm_require_nick}
+			  , dm_use_sex = #{dm_use_sex}
+			  , dm_require_sex = #{dm_require_sex}
+			  , dm_use_birth = #{dm_use_birth}
+			  , dm_require_birth = #{dm_require_birth}
+			  , dm_use_email = #{dm_use_email}
+			  , dm_require_email = #{dm_require_email}
+			  , dm_use_homepage = #{dm_use_homepage}
+			  , dm_require_homepage = #{dm_require_homepage}
+			  , dm_use_hp = #{dm_use_hp}
+			  , dm_require_hp = #{dm_require_hp}
+			  , dm_use_addr = #{dm_use_addr}
+			  , dm_require_addr = #{dm_require_addr}
+			  , dm_use_tel = #{dm_use_tel}
+			  , dm_require_tel = #{dm_require_tel}
+			  , dm_use_introduce = #{dm_use_introduce}
+			  , dm_require_introduce = #{dm_require_introduce}
+			  , dm_use_recom = #{dm_use_recom}
+			  , dm_require_recom = #{dm_require_recom}
+			  , dm_modify_dt = now()
+			  , dm_modify_id = #{dm_modify_id}
+		 WHERE  dm_id = #{dm_id}
+	</update>
+	
+	<insert id="insertMemberConfig">
+		INSERT 
+		  INTO  dm_member_config
+			 (  dm_is_member
+			 ,  dm_use_nick
+			 ,  dm_require_nick
+			 ,  dm_use_sex
+			 ,  dm_require_sex
+			 ,  dm_use_birth
+			 ,  dm_require_birth
+			 ,  dm_use_email
+			 ,  dm_require_email
+			 ,  dm_use_homepage
+			 ,  dm_require_homepage
+			 ,  dm_use_hp
+			 ,  dm_require_hp
+			 ,  dm_use_addr
+			 ,  dm_require_addr
+			 ,  dm_use_tel
+			 ,  dm_require_tel
+			 ,  dm_use_introduce
+			 ,  dm_require_introduce
+			 ,  dm_use_recom
+			 ,  dm_require_recom
+			 ,  dm_create_dt
+			 ,  dm_create_id
+			 )
+		VALUES
+			 (  #{dm_is_member}
+			 ,  #{dm_use_nick}
+			 ,  #{dm_require_nick}
+			 ,  #{dm_use_sex}
+			 ,  #{dm_require_sex}
+			 ,  #{dm_use_birth}
+			 ,  #{dm_require_birth}
+			 ,  #{dm_use_email}
+			 ,  #{dm_require_email}
+			 ,  #{dm_use_homepage}
+			 ,  #{dm_require_homepage}
+			 ,  #{dm_use_hp}
+			 ,  #{dm_require_hp}
+			 ,  #{dm_use_addr}
+			 ,  #{dm_require_addr}
+			 ,  #{dm_use_tel}
+			 ,  #{dm_require_tel}
+			 ,  #{dm_use_introduce}
+			 ,  #{dm_require_introduce}
+			 ,  #{dm_use_recom}
+			 ,  #{dm_require_recom}
+			 ,  now()
+			 ,  #{dm_create_id}
+			 )
+	</insert>
+	
+</mapper>
